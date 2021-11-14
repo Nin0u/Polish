@@ -1,8 +1,14 @@
+BUILD = dune build
+EXEC = dune exec
+
 binary:
-	dune build polish.exe
+	${BUILD} polish.exe
 
 byte:
-	dune build polish.bc
+	${BUILD} polish.bc
 
 clean:
 	dune clean
+
+testRead:
+	${BUILD} tests/testReadPolish.exe
