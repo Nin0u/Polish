@@ -47,6 +47,8 @@ Ceci est le rapport de projet à inclure dans la racine comme mentionné dans le
     confinement.
 -->
 
+11/11/21 : Fork du projet et ajout du Rapport à la racine
+
 ## Misc
 
 <!--
