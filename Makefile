@@ -10,5 +10,5 @@ byte:
 clean:
 	dune clean
 
-testRead:
+testReadPolish:
 	${BUILD} tests/testReadPolish.exe
