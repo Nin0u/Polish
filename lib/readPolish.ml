@@ -38,84 +38,79 @@ let getIndent (words: string list) =
     in (loop 0 words)/2
 ;;
 
-(** 
-    Fonction auxiliaire qui renvoie un tableau sans son dernier élément.
-    Elle sert notamment dans la fonction toExpression juste en dessous.
+(**
+    Fonction auxiliaire qui associe un caracère à un opérateur
  *)
-let removeLast (list : string list) : string list = 
-    match List.rev list with 
-    | [] -> [] 
-    | _ :: tail -> List.rev tail
 
-(** 
+ let toOp (word : string) : op option =
+    match word with
+    | "+" -> Some(Add)
+    | "-" -> Some(Sub)
+    | "*" -> Some(Mul)
+    | "/" -> Some(Div)
+    | "%" -> Some(Mod)
+    |  _  -> None    
+;;
+
+(**
     Fonction qui teste si un tableau de mots constitue une expression.
-    Renvoie un expr si c'est le cas et sinon lève une exception.
+    Renvoie (expr * []) si c'est le cas et sinon lève une exception.
 *)
-let rec toExpression (words : string list) : expr = 
-    match words with 
+
+let rec toExpression (words : string list) : (expr * string list) = 
+    match words with
     | [] -> raise Not_an_expression
-    | word :: []-> 
-        (
-            match word with
-            | "+" | "-" | "*" | "/" | "%" -> raise Not_an_expression
-            | _ -> 
-                try
-                    Num(int_of_string word)
-                with 
-                    Failure _ -> Var(word)
-        )
     | word :: otherWords -> 
-        let lastElement = List.hd (List.rev otherWords)
-        in 
-            let lastExpression = 
-                try 
-                    Num(int_of_string lastElement)
-                with 
-                    Failure _ -> Var(lastElement)
-            in
-                match word with
-                | "+" -> Op(Add,toExpression(removeLast otherWords),lastExpression)
-                | "-" -> Op(Sub,toExpression(removeLast otherWords), lastExpression)
-                | "*" -> Op(Mul,toExpression(removeLast otherWords), lastExpression)
-                | "/" -> Op(Div,toExpression(removeLast otherWords), lastExpression)
-                | "%" -> Op(Mod,toExpression(removeLast otherWords), lastExpression)
-                |  _  -> raise(Not_an_expression)
-                
+         match word with
+                | "+" | "-" | "*" | "/" | "%" -> 
+                    let (expr1, residuals) = toExpression otherWords
+                    in
+                        let (expr2, residuals2) = toExpression residuals
+                        in
+                        (Op(Option.get(toOp word),expr1,expr2),residuals2)
+                |  _  -> 
+                    try 
+                        (Num(int_of_string word),otherWords) 
+                    with 
+                        Failure _ -> (Var(word),otherWords)
+;;
+
+let readExpression (words : string list) : expr = 
+    let (expr,res) = toExpression words
+    in 
+        if res != []
+        then 
+            raise Not_an_expression
+        else expr
+;;
+
 (**
     Fonction qui teste si un tableau de mots constitue une condition.
     On sépare la liste à l'endoit du comparateur on parse le comparateur et on appelle toExpression sur les deux sous listes.
     Recursive terminale.
  *)
-let toCondition (words : string list) : cond =
-    let rec loop (expr1 : string list) 
-                 (comp : comp option) 
-                 (expr2 : string list)  
-                 (words : string list) =
-        match words with
-        | [] -> 
-            (
-                try 
-                    (toExpression (List.rev expr1),Option.get comp,toExpression (List.rev expr2))
-                with 
-                    Not_an_expression -> raise Not_a_condition
-            )
-        | word :: otherWords -> 
-            if comp = None
-            then
-                match word with 
-                | "="  -> loop expr1 (Some(Eq)) expr2 otherWords
-                | "<>" -> loop expr1 (Some(Ne)) expr2 otherWords
-                | "<=" -> loop expr1 (Some(Le)) expr2 otherWords
-                | "<"  -> loop expr1 (Some(Lt)) expr2 otherWords
-                | ">=" -> loop expr1 (Some(Ge)) expr2 otherWords
-                | ">"  -> loop expr1 (Some(Gt)) expr2 otherWords
-                | _ -> loop (word :: expr1) None expr2 otherWords
-            else 
-                match word with
-                | "=" | "<>" | "<=" | "<" | ">=" | ">" -> raise Not_a_condition
-                | _ -> loop expr1 comp (word :: expr2) otherWords
+
+let readCondition (words : string list) : cond =
+    let (expr1, residuals) = toExpression words
     in 
-        loop [] None [] words
+        match residuals with 
+        | [] -> raise Not_a_condition
+        | res :: otherRes ->
+            try 
+                let (expr2) = readExpression otherRes
+                in 
+                    match res with
+                    | "=" -> (expr1,Eq,expr2)
+                    | "<>" -> (expr1,Ne,expr2)
+                    | "<" -> (expr1,Lt,expr2)
+                    | "<=" -> (expr1,Le,expr2)
+                    | ">" -> (expr1,Gt,expr2)
+                    | ">=" -> (expr1,Ge,expr2)
+                    | _ -> raise Not_a_condition
+            with 
+                Not_an_expression -> raise Not_a_condition
 ;;
 
-let read_polish (filename:string) : program = faiwith TODO;;
+(*
+let read_polish (filename:string) : program = failwith "TODO";;
+*)

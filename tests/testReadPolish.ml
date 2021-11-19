@@ -45,23 +45,26 @@ let rec testGetIndent (fileList : string list) : unit =
  *)
 
 let expressions = [
-  ["+";"+";"1";"2";"3"];          (* YES *)
-  [];                             (*  NO *)
-  ["*";"/";"n";"3";"b"];          (* YES *)
-  ["%"];                          (*  NO *)
-  ["%";"+";"a";"*";"3";"n";"2"]   (*  NO *)
-
+  [];                                         (*  NO *)
+  ["%"];                                      (*  NO *)
+  ["1"];                                      (* YES *)
+  ["a"];                                      (* YES *)
+  ["+";"+";"1";"2";"3"];                      (* YES *)
+  ["*";"/";"n";"3";"b"];                      (* YES *)
+  ["%";"+";"a";"*";"3";"n";"2"];              (* YES *)
+  ["+";"*";"%";"4";"2";"n";"*";"1";"3"];      (* YES *)
+  ["+";"*";"%";"4";"2";"n";"*";"1";"3";"B"];  (*  NO *) 
 ]
 ;;
 
-let rec testToExpression (expressions : (string list) list) : unit = 
+let rec testReadExpression (expressions : (string list) list) : unit = 
   match expressions with 
   | [] -> print_string "testToExpression Done.\n"
   | head :: tail -> 
     try
-      match toExpression (head) with 
-      | _ -> print_string "YES\n"; testToExpression tail
-    with Not_an_expression -> print_string "NO\n"; testToExpression tail
+      match readExpression (head) with 
+      | _ -> print_string "YES\n"; testReadExpression tail
+    with Not_an_expression -> print_string "NO\n"; testReadExpression tail
 ;;
 
 (*--------------------------------------------------------------------------------------------------*)
@@ -70,24 +73,27 @@ let rec testToExpression (expressions : (string list) list) : unit =
   TEST POUR LA FONCTION toCondition
  *)
  let conditions = [
-    ["1";"=";"1"];                      (* YES *)
-    ["+";"x";"y";"<=";"+";"a";"b"];     (* YES *)
-    ["%";"3";"y";"<=";"/";"10";"2"];    (* YES *)
-    ["x";"y"];                          (*  NO *) 
-    [];                                 (*  NO *)
-    ["x";"+";"1";"=";"2"];              (*  NO *)
-    ["2";"=";"x";"+";"1"];              (*  NO *)
+    ["1";"=";"1"];                                      (* YES *)
+    ["+";"x";"y";"<=";"+";"a";"b"];                     (* YES *)
+    ["%";"3";"y";"<=";"/";"10";"2"];                    (* YES *)
+    ["x";"y"];                                          (*  NO *) 
+    [];                                                 (*  NO *)
+    ["x";"+";"1";"=";"2"];                              (*  NO *)
+    ["2";"=";"x";"+";"1"];                              (*  NO *)
+    ["+";"*";"%";"4";"2";"n";"*";"1";"3";"<=";"0"]  (* YES *)
  ]
  ;;
 
-let rec testToCondition (conditions : (string list) list) : unit = 
+let rec testReadCondition (conditions : (string list) list) : unit = 
   match conditions with 
   | [] -> print_string "testToCondition Done.\n"
   | head :: tail -> 
     try
-      match toCondition (head) with 
-      | _ -> print_string "YES\n"; testToCondition tail
-    with Not_a_condition -> print_string "NO\n"; testToCondition tail
+      match readCondition (head) with 
+      | _ -> print_string "YES\n"; testReadCondition tail
+    with
+      | Not_an_expression 
+      | Not_a_condition -> print_string "NO\n"; testReadCondition tail
 ;;
 
 (**
@@ -98,8 +104,8 @@ let main() =
     match Sys.argv with
   | [|_;"read"|] -> testRead example_files
   | [|_;"indent"|] -> testGetIndent example_files
-  | [|_;"toExpression"|] -> testToExpression expressions
-  | [|_;"toCondition"|] -> testToCondition conditions
+  | [|_;"toExpression"|] -> testReadExpression expressions
+  | [|_;"toCondition"|] -> testReadCondition conditions
   | _ -> print_string 
   "Unknown function.\n
     List of testable functions :\n
