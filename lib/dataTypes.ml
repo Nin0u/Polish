@@ -39,19 +39,19 @@ and block = (position * instr) list
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 
-(** EXCEPTIONS UTILES *)
-exception Not_an_expression (* Pour readExpression dans readPolish.ml *)
-exception Not_a_condition   (* Pour readCondition dans readPolish.ml*)
+(** 
+  EXCEPTIONS UTILES
+  chaque exception ayant un int conserve la ligne où s'est produite l'erreur
+ *)
 
-(* 
-  Pour parseLine et parseBlock 
-  La chaîne désigne le nom de l'erreur 
-  L'entier désigne la ligne à laquelle s'est produite l'erreur
-*)
-exception Parsing_error of (string * int) 
+exception Num_or_var
+
+exception Not_an_expression of int (* Pour readExpression dans readPolish.ml *)
+exception Not_a_condition of int   (* Pour readCondition dans readPolish.ml*)
+exception Arguments_error of int (** Pour READ *)
 
 (** 
   Est levée quand une erreur se produit à l'affectation
   se référer à la foncton readSet de readPolish
 *)
-exception Set_error
+exception Set_error of int

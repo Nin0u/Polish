@@ -34,34 +34,39 @@ let read (filename : string) : (position * string) list =
 (*--------------------------------------------------------------------------------------------------*)
 
 (**
-    Fonction auxiliaire factorise du code
-    et 
+    Fonction associant une chaîne de caractères à un opérateur
+    Sauf les Num et les Var
+*)
+let matchOp (str : string) : op =
+    match str with
+    | "+" -> Add
+    | "-" -> Sub
+    | "*" -> Mul
+    | "/" -> Div
+    | "%" -> Mod 
+    | _ -> raise Num_or_var
+;;
+
+(**
     Fonction qui teste si un tableau de mots constitue une expression.
     Renvoie (expr * []) si c'est le cas et sinon lève une exception.
 *)
-
-let rec opAndRes (otherWords : string list) (op:op)  =
-    let (expr1, residuals) = toExpression otherWords
-    in
-        let (expr2, residuals2) = toExpression residuals
-        in
-            (Op(op,expr1,expr2),residuals2)
-
-and toExpression (words : string list) : (expr * string list) = 
+let rec toExpression (words : string list) (pos : position): (expr * string list) = 
     match words with
-    | [] -> raise Not_an_expression
+    | [] -> raise (Not_an_expression pos)
     | word :: otherWords -> 
-         match word with
-                | "+" -> opAndRes otherWords Add
-                | "-" -> opAndRes otherWords Sub
-                | "*" -> opAndRes otherWords Mul
-                | "/" -> opAndRes otherWords Div
-                | "%" -> opAndRes otherWords Mod
-                |  _  -> 
-                    try 
-                        (Num(int_of_string word),otherWords) 
-                    with 
-                        Failure _ -> (Var(word),otherWords)
+        match word with
+        | "+" | "-" | "*" | "/" | "%" ->   
+            let (expr1, residuals) = toExpression otherWords pos
+            in
+                let (expr2, residuals2) = toExpression residuals pos
+                in 
+                    (Op(matchOp word,expr1,expr2),residuals2)
+        | _ ->
+            try 
+                (Num(int_of_string word),otherWords) 
+            with 
+                Failure _ -> (Var(word),otherWords)
 ;;
 
 (**
@@ -70,15 +75,12 @@ and toExpression (words : string list) : (expr * string list) =
     car dans le cas contraire ce ne serait pas une expression.
  *)
 
-let readExpression (words : string list) : expr = 
-    try
-        let (expr,res) = toExpression words
-        in 
-            if res != []
-            then 
-                raise Not_an_expression
-            else expr
-    with Not_an_expression -> raise Not_an_expression
+let readExpression (words : string list) (pos : int): expr = 
+    let (expr,res) = toExpression words pos
+    in 
+        if res = []
+        then expr
+        else raise (Not_an_expression pos)
 ;;
 
 (**
@@ -89,70 +91,55 @@ let readExpression (words : string list) : expr =
     de droite sous forme d'expression avec readExpression
  *)
 
-let readCondition (words : string list) : cond =
-    let (expr1, residuals) = toExpression words
+let readCondition (words : string list) (pos : int): cond =
+    let (expr1, residuals) = toExpression words pos
     in 
         match residuals with 
-        | [] -> raise Not_a_condition
+        | [] -> raise (Not_a_condition pos)
         | res :: otherRes ->
-            try 
-                let (expr2) = readExpression otherRes
-                in 
-                    match res with
-                    | "=" -> (expr1,Eq,expr2)
-                    | "<>" -> (expr1,Ne,expr2)
-                    | "<" -> (expr1,Lt,expr2)
-                    | "<=" -> (expr1,Le,expr2)
-                    | ">" -> (expr1,Gt,expr2)
-                    | ">=" -> (expr1,Ge,expr2)
-                    | _ -> raise Not_a_condition
-            with 
-                Not_an_expression -> raise Not_a_condition
+            let (expr2) = readExpression otherRes pos
+            in 
+                match res with
+                | "=" -> (expr1,Eq,expr2)
+                | "<>" -> (expr1,Ne,expr2)
+                | "<" -> (expr1,Lt,expr2)
+                | "<=" -> (expr1,Le,expr2)
+                | ">" -> (expr1,Gt,expr2)
+                | ">=" -> (expr1,Ge,expr2)
+                | _ -> raise (Not_a_condition pos)
 ;;
 
 (**
     Fonction qui teste si une ligne représente une affectation.
     Lève le
 *)
-let readSet (words : string list) : instr = 
-    let (expr1,residuals) = toExpression words
-    in 
-    match expr1 with
-    | Var(s) -> 
-        (
-        match residuals with
-        | [] -> raise Set_error
-        | res :: otherRes ->
-            match res with
-            | ":=" -> 
-                (
-                try
-                    Set(s,readExpression otherRes)
-                with Not_an_expression -> raise Not_an_expression 
-                )
-            | _ -> raise Set_error
-        )
-    | _ -> raise Set_error
+let readSet (words : string list) (pos : int) : instr = 
+    match words with
+    | s :: ":=" :: tail -> 
+        if s = ""
+        then raise (Set_error pos)
+        else
+            Set(s,readExpression tail pos)
+    | _ -> raise (Set_error pos)
 ;;
 
 (*--------------------------------------------------------------------------------------------------*)
 
 (** 
-    Fonction qui renvoie l'indentation d'une ligne découpée en mots.
-    En fait, elle compte le nombre de "" avant le premier mot non vide.
-    La division par deux à la fin est due à la taille d'une indentation qui,
-    sur la plupart des éditeurs, est de 2 espaces.
-    On se fixe cette taille de tabulation pour l'instant.
-*)
-let getIndent (words: string list) = 
-    let rec loop acc words=
-        match words with
-        | [] -> acc
-        | word :: otherWords -> 
-            if word = "" 
-            then loop (1 + acc) otherWords
-            else acc
-    in (loop 0 words)/2
+    Fonction qui renvoie l'indentation d'une ligne ainsi que la liste des mots sans espaces.
+    On se fixe la taille d'une indentation à 2 espaces.
+*) 
+let indentAndSplit (words: string) : (int * (string list)) = 
+    let split = String.split_on_char ' ' words
+    in
+        let rec loop accIndent accSplit split=
+            match split with
+            | [] -> (accIndent /2 , List.rev accSplit)
+            | word :: otherWords -> 
+                if word = "" 
+                then loop (1 + accIndent) (accSplit) otherWords
+                else loop (accIndent) (word :: accSplit) otherWords
+        in loop 0 [] split
 ;;
 
 (** 
@@ -160,21 +147,136 @@ let getIndent (words: string list) =
 *)
 
 (*--------------------------------------------------------------------------------------------------*)
-    
-(** 
-    Fonction pour extraire un block (avec même indentation)
-    Renvoie le block extrait et le reste des lignes.
-*)
-let extractBlockLines (lines : (position * string) list) (indent : int) : ((position * string) list * (position * string)) =
-    let rec loop acc =
-        match lines with 
+
+let rec parseBlock (lines : (position * string) list) 
+                (indent : int)
+                : block * ((position * string) list) =    
+    let rec loop acc lines =
+        match lines with
         | [] -> (List.rev acc,[])
-        | (pos, line) :: otherLines ->
-            if getIndent (String.split_on_char line) = indent
-            then loop ((pos,line) :: acc)
-            else (List.rev acc, otherLines)
-    in loop [] 
+        | (pos,str) :: otherLines ->
+            let (ind,split) = indentAndSplit str
+            in
+                if ind = indent 
+                then 
+                (
+                    let parsedLine = parseLine pos split otherLines indent
+                    in 
+                        match parsedLine with
+                        | None -> loop acc otherLines
+                        | Some(parsedInstr, residuals) -> 
+                            loop (parsedInstr :: acc) residuals
+                )
+                else (List.rev acc, lines)
+    in
+        loop [] lines
+
+and parseLine (pos : int)
+                (line : string list)
+                (otherLines : (position * string) list)
+                (indent : int)
+                : ((position * instr) * ((position * string) list)) option =
+        match line with
+        | [] -> None
+        | word :: otherWords -> 
+            match word with
+            | "COMMENT" -> None
+            | "READ" ->
+                if List.length otherWords = 1
+                then 
+                    Some(
+                        (pos,Read(word))
+                        , otherLines
+                    )
+                else raise (Arguments_error pos)
+                    
+
+            | "PRINT" ->
+                Some(
+                    (pos,Print(readExpression otherWords pos))
+                    ,otherLines
+                )
+
+            | "IF" -> 
+                (
+                let (ifBlock,ifRes) = parseBlock otherLines (indent+1)
+                in 
+                    let (elseBlock, elseRes) = elseBlock ifRes indent
+                    in 
+                        Some(
+                            (pos,If(readCondition otherWords pos,ifBlock,elseBlock))
+                            ,elseRes
+                        )
+                )
+            | "WHILE" ->
+                (
+                let (whileBlock,residuals) = parseBlock otherLines (indent+1)
+                in 
+                    Some(
+                        (pos,While(readCondition otherWords pos,whileBlock))
+                        ,residuals
+                    )
+                )
+            | _ ->  
+                Some(
+                    (pos,readSet line pos)
+                    ,otherLines
+                )
+
+(**
+    Fonction qui vérifie la présence d'un bloc else
+    Elle est appelée dans parseLine dans le cas d'un IF.
+*)
+and elseBlock (ifRes : (position * string) list) 
+                (indent : int)
+                : block * ((position * string) list) =
+    match ifRes with
+    | [] -> ([],[])
+    | (pos,line) :: otherLines ->
+        let (ind,split) = indentAndSplit line
+        in 
+            if ind = indent
+            then
+            (
+                if List.length split = 1
+                then
+                (
+                    if(List.hd split = "ELSE")
+                    then
+                        parseBlock otherLines (indent+1)
+                    else 
+                        ([],ifRes)
+                )
+                else raise (Arguments_error pos)
+            )
+            else ([],ifRes)
+;;
+
+(**
+    Fonction qui parse le block entier.
+*)
+let readProgram (lines : (position * string) list) : program option=
+    try
+        let (program,residuals) = parseBlock lines 0
+        in
+            if residuals != []
+            then (Printf.printf "Parsing error\n"; None)
+            else Some(program)
+    with
+        | Not_an_expression pos -> Printf.printf "Not an expression at line %d\n" pos; None
+        | Not_a_condition pos -> Printf.printf "Not a condition at line %d\n" pos; None
+        | Arguments_error pos -> Printf.printf "Argument error at line %d\n" pos; None
+        | Set_error pos -> Printf.printf "Set error at line %d\n" pos; None
 
 (*--------------------------------------------------------------------------------------------------*)
  
-let read_polish (filename:string) : program = failwith "TODO"
+(**
+    FONCTION read_polish à implémenter :
+    Lit un fichier et le transforme en program
+*)
+
+let read_polish (filename:string) : program = 
+    match readProgram(read filename) with
+    | None -> raise (Failure "read_polish")
+    | Some(prog) -> prog
+;;
