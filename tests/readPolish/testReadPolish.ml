@@ -154,15 +154,40 @@ let rec testReadCondition (conditions : (string list) list) : unit =
 (*--------------------------------------------------------------------------------------------------*)
 (** 
   TEST de read_polish 
-  S'il y a un problème il vient de parseBlock/parseLine
 *)
 
+(**
+  Affiche le nombre de commandes dans le bloc principal.
+*)
 let rec testReadPolish (example_files : string list) : unit =
-  match example_files with
-  | [] -> print_string "testReadPolish Done.\n"
-  | head :: tail ->
-    print_int (List.length (read_polish head));
-    testReadPolish tail;
+  
+    match example_files with
+    | [] -> print_string "testReadPolish Done.\n"
+    | head :: tail ->
+      try
+        print_int (List.length (read_polish head));
+        print_string "\n";
+        testReadPolish tail
+      with
+      Arguments_error pos -> 
+        Printf.printf "Arguments_error at line %d\n" pos;
+        testReadPolish tail
+ 
+;;
+
+(** On testera la justesse du parsing avec print_polish *)
+
+
+(**
+  Execute tous les tests.
+*)
+let allTests : unit = 
+  testRead example_files;
+  testIndentAndSplit example_files;
+  testReadExpression expressions;
+  testReadCondition conditions;
+  testReadSet set;
+  testReadPolish example_files
 ;;
 
 (*--------------------------------------------------------------------------------------------------*)
@@ -179,6 +204,7 @@ let main() =
   | [|_;"readCondition"|] -> testReadCondition conditions
   | [|_;"readSet"|] -> testReadSet set
   | [|_;"read_polish"|] -> testReadPolish example_files
+  | [|_;"all"|] -> allTests
   | _ -> 
     print_string 
       "Unknown function.\n
@@ -188,7 +214,8 @@ let main() =
         -readExpression : prints YES if the tested list is an expression. Prints NO otherwise.\n
         -readCondition : prints YES if the tested list is a condition. Prints NO otherwise. \n
         -readSet : prints YES if the tested list is a SET. Prints NO otherwise.\n
-        -read_polish : \n
+        -read_polish : prints the number of commands in the main block.\n
+        -all : do all the tests.\n
       \n"
 
 (** Lancement du main *)

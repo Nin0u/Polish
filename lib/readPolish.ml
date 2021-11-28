@@ -232,7 +232,7 @@ and elseBlock (ifRes : (position * string) list)
                 : block * ((position * string) list) =
     match ifRes with
     | [] -> ([],[])
-    | (pos,line) :: otherLines ->
+    | (_,line) :: otherLines ->
         let (ind,split) = indentAndSplit line
         in 
             if ind = indent
@@ -247,7 +247,7 @@ and elseBlock (ifRes : (position * string) list)
                     else 
                         ([],ifRes)
                 )
-                else raise (Arguments_error pos)
+                else ([], ifRes)
             )
             else ([],ifRes)
 ;;
@@ -277,6 +277,6 @@ let readProgram (lines : (position * string) list) : program option=
 
 let read_polish (filename:string) : program = 
     match readProgram(read filename) with
-    | None -> raise (Failure "read_polish")
+    | None -> []
     | Some(prog) -> prog
 ;;
