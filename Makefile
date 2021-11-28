@@ -10,5 +10,17 @@ byte:
 clean:
 	dune clean
 
-testRead:
-	${BUILD} tests/testReadPolish.exe
+buildTests: 
+	${BUILD} tests/readPolish/testReadPolish.exe
+
+testReadPolish:
+	${BUILD} tests/readPolish/testReadPolish.exe
+	${EXEC} tests/readPolish/testReadPolish.exe read_polish
+
+testPrintPolish:
+	${BUILD} tests/printPolish/testPrintPolish.exe
+	${EXEC} tests/printPolish/testPrintPolish.exe print_polish
+
+testEvalPolish:
+	${BUILD} tests/evalPolish/testEvalPolish.exe
+	${EXEC} tests/evalPolish/testEvalPolish.exe eval_polish

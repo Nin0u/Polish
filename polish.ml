@@ -1,6 +1,7 @@
 (** Projet Polish -- Analyse statique d'un mini-langage impératif *)
-
-let read_polish (filename:string) : program = failwith "TODO"
+open Lib.DataTypes
+open Lib.ReadPolish
+open Lib.EvalPolish
 
 let print_polish (p:program) : unit = failwith "TODO"
 
