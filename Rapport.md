@@ -43,8 +43,8 @@ Nous avons décidé de découper notre projet de la manière suivante :
 - Un module pour afficher le code polish interpreté : `PrintPolish`
 - Un module pour evaluer le code interpreté : `EvalPolish`
 
-Ce découpage permet d'attribuer à chaque module une tâche précise qui nécéssitent plusieurs fonctions auxiliaires.
-Nous allégeons alors par la même occasion le fichier `polish.ml`
+Ce découpage permet d'attribuer à chaque module une tâche précise qui nécéssite plusieurs fonctions auxiliaires.
+Nous allégeons alors par la même occasion le fichier `polish.ml`.
 
 ## Organisation du travail
 
