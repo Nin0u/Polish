@@ -1,11 +1,8 @@
 (** Projet Polish -- Analyse statique d'un mini-langage impératif *)
 open Lib.DataTypes
 open Lib.ReadPolish
+open Lib.PrintPolish
 open Lib.EvalPolish
-
-let print_polish (p:program) : unit = failwith "TODO"
-
-let eval_polish (p:program) : unit = failwith "TODO"
 
 let usage () =
   print_string "Polish : analyse statique d'un mini-langage\n";
