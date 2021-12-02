@@ -15,7 +15,7 @@ buildTests:
 
 testReadPolish:
 	${BUILD} tests/readPolish/testReadPolish.exe
-	${EXEC} tests/readPolish/testReadPolish.exe read_polish
+	${EXEC} tests/readPolish/testReadPolish.exe
 
 testPrintPolish:
 	${BUILD} tests/printPolish/testPrintPolish.exe

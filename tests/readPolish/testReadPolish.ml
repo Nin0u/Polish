@@ -204,8 +204,8 @@ let main() =
   | [|_;"readCondition"|] -> testReadCondition conditions
   | [|_;"readSet"|] -> testReadSet set
   | [|_;"read_polish"|] -> testReadPolish example_files
-  | [|_;"all"|] -> allTests
-  | _ -> 
+  | [|_;s|] ->  
+    if s <> "" then
     print_string 
       "Unknown function.\n
         List of available arguments :\n
@@ -215,8 +215,8 @@ let main() =
         -readCondition : prints YES if the tested list is a condition. Prints NO otherwise. \n
         -readSet : prints YES if the tested list is a SET. Prints NO otherwise.\n
         -read_polish : prints the number of commands in the main block.\n
-        -all : do all the tests.\n
       \n"
-
+  | _ -> allTests
+   
 (** Lancement du main *)
 let () = main ();;
