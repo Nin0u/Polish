@@ -39,6 +39,12 @@ and block = (position * instr) list
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 
+
+(** Structure de l'environnement lors de l'évaluation *)
+type env = {
+  varName : name;
+  mutable value : int
+}
 (** 
   EXCEPTIONS UTILES
   chaque exception ayant un int conserve la ligne où s'est produite l'erreur
@@ -55,3 +61,8 @@ exception Arguments_error of int (** Pour READ *)
   se référer à la foncton readSet de readPolish
 *)
 exception Set_error of int
+
+exception Varname_already_exists of int
+exception No_such_varName of name * int
+exception Division_by_zero of int
+exception Modulo_by_zero of int

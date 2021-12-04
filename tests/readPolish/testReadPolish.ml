@@ -67,15 +67,15 @@ let rec testIndentAndSplit (fileList : string list) : unit =
  *)
 
 let expressions = [
-  [];                                         (*  NO *)
-  ["%"];                                      (*  NO *)
-  ["1"];                                      (* YES *)
-  ["a"];                                      (* YES *)
-  ["+";"+";"1";"2";"3"];                      (* YES *)
-  ["*";"/";"n";"3";"b"];                      (* YES *)
-  ["%";"+";"a";"*";"3";"n";"2"];              (* YES *)
-  ["+";"*";"%";"4";"2";"n";"*";"1";"3"];      (* YES *)
-  ["+";"*";"%";"4";"2";"n";"*";"1";"3";"B"];  (*  NO *) 
+  [];
+  ["%"];
+  ["1"];
+  ["a"];
+  ["+";"+";"1";"2";"3"];
+  ["*";"/";"n";"3";"b"];
+  ["%";"+";"a";"*";"3";"n";"2"];
+  ["+";"*";"%";"4";"2";"n";"*";"1";"3"];
+  ["+";"*";"%";"4";"2";"n";"*";"1";"3";"B"];
 ]
 ;;
 
@@ -84,9 +84,13 @@ let rec testReadExpression (expressions : (string list) list) : unit =
   | [] -> print_string "testReadExpression Done.\n"
   | head :: tail -> 
     try
-      match readExpression (head) with 
-      | _ -> print_string "YES\n"; testReadExpression tail
-    with Not_an_expression _-> print_string "NO\n"; testReadExpression tail
+      match readExpression head 0 with 
+      | _ -> 
+        print_string "YES\n";
+        testReadExpression tail
+    with Not_an_expression _ ->
+        print_string "NO\n";
+        testReadExpression tail
 ;;
 
 (*--------------------------------------------------------------------------------------------------*)
@@ -111,7 +115,7 @@ let rec testReadCondition (conditions : (string list) list) : unit =
   | [] -> print_string "testReadCondition Done.\n"
   | head :: tail -> 
     try
-      match readCondition (head) with 
+      match readCondition head 0 with 
       | _ -> print_string "YES\n"; testReadCondition tail
     with
       | Not_an_expression  _ | Not_a_condition _ -> 
@@ -158,6 +162,7 @@ let rec testReadCondition (conditions : (string list) list) : unit =
 
 (**
   Affiche le nombre de commandes dans le bloc principal.
+  le bon fonctionnement de read_polish sera confirmé par print_polish
 *)
 let rec testReadPolish (example_files : string list) : unit =
   
@@ -173,21 +178,6 @@ let rec testReadPolish (example_files : string list) : unit =
         Printf.printf "Arguments_error at line %d\n" pos;
         testReadPolish tail
  
-;;
-
-(** On testera la justesse du parsing avec print_polish *)
-
-
-(**
-  Execute tous les tests.
-*)
-let allTests : unit = 
-  testRead example_files;
-  testIndentAndSplit example_files;
-  testReadExpression expressions;
-  testReadCondition conditions;
-  testReadSet set;
-  testReadPolish example_files
 ;;
 
 (*--------------------------------------------------------------------------------------------------*)
@@ -216,7 +206,14 @@ let main() =
         -readSet : prints YES if the tested list is a SET. Prints NO otherwise.\n
         -read_polish : prints the number of commands in the main block.\n
       \n"
-  | _ -> allTests
-   
+  | _ -> 
+    testRead example_files;
+    testIndentAndSplit example_files;
+    testReadExpression expressions;
+    testReadCondition conditions;
+    testReadSet set;
+    testReadPolish example_files
+;;
+  
 (** Lancement du main *)
 let () = main ();;
