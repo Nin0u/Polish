@@ -122,6 +122,7 @@ let handlePrint (env : env list)
                     (pos : int) 
                     : env list =
     print_string (string_of_int (evalExpr env exp pos)); 
+    print_string ("\n");
     env
 ;;
 
