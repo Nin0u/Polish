@@ -191,7 +191,7 @@ and evalBlock (env : env list)
 let evalProgram (p : program) : unit =
     try
         match evalBlock [] p with
-        | _ -> print_string "\neval Done.\n"
+        | _ -> ()
     with
         | Division_by_zero pos -> 
             Printf.printf "\nDivision by zero at line %d\n" pos;
