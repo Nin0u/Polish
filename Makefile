@@ -1,5 +1,4 @@
 BUILD = dune build
-EXEC = dune exec
 
 binary:
 	${BUILD} polish.exe
@@ -10,17 +9,13 @@ byte:
 clean:
 	dune clean
 
-buildTests: 
+buildTests: buildReadPolish buildPrintPolish buildEvalPolish
+
+buildReadPolish:
 	${BUILD} tests/readPolish/testReadPolish.exe
 
-testReadPolish:
-	${BUILD} tests/readPolish/testReadPolish.exe
-	${EXEC} tests/readPolish/testReadPolish.exe
-
-testPrintPolish:
+buildPrintPolish:
 	${BUILD} tests/printPolish/testPrintPolish.exe
-	${EXEC} tests/printPolish/testPrintPolish.exe print_polish
 
-testEvalPolish:
+buildEvalPolish:
 	${BUILD} tests/evalPolish/testEvalPolish.exe
-	${EXEC} tests/evalPolish/testEvalPolish.exe eval_polish

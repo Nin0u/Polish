@@ -29,6 +29,59 @@ Ceci est le rapport de projet à inclure dans la racine comme mentionné dans le
     vers leur documentation.
 -->
 
+Toutes les commandes de compilation suivantes s'exécutent à la racine du projet.
+
+### Programme principal
+
+#### Compilation
+
+En `.exe` :
+
+```
+    make
+```
+
+ou bien
+
+```
+    make binary
+```
+
+En `.bc`
+
+```
+    make byte
+```
+
+#### Execution
+
+```
+    ./run [argument] [chemin-fichier]
+```
+
+avec `[argument]` valant :
+
+- `--reprint `
+- `--eval`
+
+### Fichiers Test
+
+#### Compilation
+
+```
+    make buildTests
+```
+
+Remarque : il est possible de compiler les fichiers tests séparemment (cf. [Makeflie]()).
+
+La compilation génère un fichier `.exe` dans le répertoire du fichier test en question.
+
+#### Execution
+
+```
+    dune exec -- [fichier.exe] [optionnel: Fonction à Tester]
+```
+
 ## Découpage modulaire
 
 <!--
@@ -57,8 +110,9 @@ Nous allégeons alors par la même occasion le fichier `polish.ml`.
 -->
 
 11/11/21 : Fork du projet et ajout du Rapport à la racine
-13/11/21 : Réunion sur le découpage en module du projet : Un module pour chaque fonction demandée.
-28/11/21 : read_polish terminé. Correction éventuelles grâce à print_polish
+13/11/21 : Réunion sur le découpage en module du projet : Un module pour chaque fonction demandée. Une personne sur read_polish une autre sur print_polish.
+28/11/21 : read_polish terminé. Correction éventuelles grâce à print_polish.
+5/12/21 : eval_polish terminé.
 
 ## Misc
 
