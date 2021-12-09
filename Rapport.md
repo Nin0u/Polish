@@ -22,38 +22,23 @@ Ceci est le rapport de projet à inclure dans la racine comme mentionné dans le
 ## Compilation et exécution
 
 <!--
-    Documentez ensuite de façon précise la manière dont votre
+    Documentez de façon précise la manière dont votre
     projet doit être compilé (normalement via dune) et exécuté (en donnant
     les options acceptées par votre programme). Précisez si vous vous êtes
     servi de bibliothèques externes, et donnez dans ce cas un pointeur
     vers leur documentation.
 -->
 
-Toutes les commandes de compilation suivantes s'exécutent à la racine du projet.
+Notre projet nécessite la bibliothèque suivante :
 
-### Programme principal
+- [Zarith](https://github.com/ocaml/Zarith) : Zarith permet de manipuler des grands nombres. La librairie est utile notamment dans l'évaluation
 
-#### Compilation
+Pour compiler, taper à la racine :
 
-En `.exe` :
+- `make` pour avoir un programme en `.exe`
+- `make byte` pour avoir un programme en `.bc`
 
-```
-    make
-```
-
-ou bien
-
-```
-    make binary
-```
-
-En `.bc`
-
-```
-    make byte
-```
-
-#### Execution
+Pour l'exécution, si vous avez build un .exe tapez :
 
 ```
     ./run [argument] [chemin-fichier]
@@ -63,24 +48,6 @@ avec `[argument]` valant :
 
 - `--reprint `
 - `--eval`
-
-### Fichiers Test
-
-#### Compilation
-
-```
-    make buildTests
-```
-
-Remarque : il est possible de compiler les fichiers tests séparemment (cf. [Makeflie]()).
-
-La compilation génère un fichier `.exe` dans le répertoire du fichier test en question.
-
-#### Execution
-
-```
-    dune exec -- [fichier.exe] [optionnel: Fonction à Tester]
-```
 
 ## Découpage modulaire
 
@@ -97,7 +64,8 @@ Nous avons décidé de découper notre projet de la manière suivante :
 - Un module pour evaluer le code interpreté : `EvalPolish`
 
 Ce découpage permet d'attribuer à chaque module une tâche précise qui nécéssite plusieurs fonctions auxiliaires.
-Nous allégeons alors par la même occasion le fichier `polish.ml`.
+Leur implémentation est également très similaires.
+Nous allégeons ainsi par la même occasion le fichier `polish.ml`.
 
 ## Organisation du travail
 
@@ -109,10 +77,31 @@ Nous allégeons alors par la même occasion le fichier `polish.ml`.
     confinement.
 -->
 
-11/11/21 : Fork du projet et ajout du Rapport à la racine
-13/11/21 : Réunion sur le découpage en module du projet : Un module pour chaque fonction demandée. Une personne sur read_polish une autre sur print_polish.
-28/11/21 : read_polish terminé. Correction éventuelles grâce à print_polish.
-5/12/21 : eval_polish terminé.
+11/11/21 :
+
+> Fork du projet et ajout du Rapport à la racine
+
+13/11/21 :
+
+> Réunion sur le découpage en module du projet :
+> Un module pour chaque fonction demandée.
+> Une personne sur read_polish une autre sur print_polish. eval_polish encore à décider.
+
+28/11/21 :
+
+> read_polish terminé.
+
+30/11/21 :
+
+> Prise de décision pour qui implémente eval_polish.
+
+5/12/21 :
+
+> eval_polish terminé.
+
+09/12/21 :
+
+> implémentation avec zarith.
 
 ## Misc
 
