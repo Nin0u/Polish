@@ -72,9 +72,9 @@ let rec toExpression (words : string list)
                     (Op(matchOp word,expr1,expr2),residuals2)
         | _ ->
             try 
-                (Num(int_of_string word),resWords) 
+                (Num(Z.of_string word),resWords) 
             with 
-                Failure _ -> (Var(word),resWords)
+                Invalid_argument _ -> (Var(word),resWords)
 ;;
 
 (**

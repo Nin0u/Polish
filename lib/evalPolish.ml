@@ -6,29 +6,29 @@ open DataTypes
 (*---------------------------------------------------------------------------*)
 
 let applyOp (op : op) 
-            (val1 : int) 
-            (val2 : int) 
+            (val1 : Z.t) 
+            (val2 : Z.t) 
             (pos : int)
-            : int =
+            : Z.t =
 
     match op with
-    | Add -> val1 + val2
-    | Sub -> val1 - val2
-    | Mul -> val1 * val2 
+    | Add -> Z.add val1 val2
+    | Sub -> Z.sub val1 val2
+    | Mul -> Z.mul val1 val2 
     | Div -> 
-        if val2 <> 0
-        then val1 / val2
-        else raise (Division_by_zero pos)
+        if (Z.equal val2 (Z.zero))
+        then raise (Division_by_zero pos)
+        else Z.div val1 val2
     | Mod -> 
-        if val2 <> 0
-        then val1 mod val2
-        else raise (Modulo_by_zero pos)
+        if (Z.equal val2 (Z.zero))
+        then raise (Modulo_by_zero pos)
+        else Z.rem val1 val2
 ;;
 
 let rec evalExpr (env: env list) 
                 (exp : expr)  
                 (pos : int)
-                : int =
+                : Z.t =
     match exp with 
     | Num(n) -> n 
     | Var(s) -> 
@@ -44,14 +44,14 @@ let rec evalExpr (env: env list)
         applyOp op (evalExpr env exp1 pos) (evalExpr env exp2 pos) pos
 ;;
 
-let compare (comparison : comp) (val1 : int) (val2 : int) : bool =
+let compare (comparison : comp) (val1 : Z.t) (val2 : Z.t) : bool =
     match comparison with
-    | Eq -> val1 = val2
-    | Ne -> val1 <> val2
-    | Lt -> val1 < val2
-    | Le -> val1 <= val2
-    | Gt -> val1 > val2
-    | Ge -> val1 >= val2
+    | Eq -> Z.equal val1 val2
+    | Ne -> not (Z.equal val1 val2)
+    | Lt -> Z.lt val1 val2
+    | Le -> Z.leq val1 val2
+    | Gt -> Z.gt val1 val2
+    | Ge -> Z.geq val1 val2
 ;;
 
 let evalCond (env: env list) 
@@ -101,8 +101,8 @@ let handleRead (env : env list)
                 (varName : name)  
                 (pos : int) 
                 : env list =
-    print_string (varName ^ "? ");
-    let n = read_int()
+    print_string (varName ^ "?\n");
+    let n = Z.of_string (read_line())
     in 
         try
            match List.find (fun x -> x.varName = varName) env with
@@ -121,7 +121,7 @@ let handlePrint (env : env list)
                     (exp : expr)  
                     (pos : int) 
                     : env list =
-    print_string (string_of_int (evalExpr env exp pos)); 
+    print_string (Z.to_string (evalExpr env exp pos)); 
     print_string ("\n");
     env
 ;;

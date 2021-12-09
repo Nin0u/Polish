@@ -11,7 +11,7 @@ type op = Add | Sub | Mul | Div | Mod
 
 (** Expressions arithmétiques *)
 type expr =
-  | Num of int
+  | Num of Z.t
   | Var of name
   | Op of op * expr * expr
 
@@ -43,7 +43,7 @@ type program = block
 (** Structure de l'environnement lors de l'évaluation *)
 type env = {
   varName : name;
-  mutable value : int
+  mutable value : Z.t
 }
 (** 
   EXCEPTIONS UTILES
