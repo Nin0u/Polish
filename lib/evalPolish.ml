@@ -101,7 +101,7 @@ let handleRead (env : env list)
                 (varName : name)  
                 (pos : int) 
                 : env list =
-    print_string (varName ^ "? ");
+    print_string (varName ^ "?\n");
     let n = Z.of_string (read_line())
     in 
         try
