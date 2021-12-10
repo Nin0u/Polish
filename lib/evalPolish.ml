@@ -5,6 +5,12 @@ open DataTypes
 *)
 (*---------------------------------------------------------------------------*)
 
+(**
+    Fonction qui évalue une opération binaire.
+
+    Lève une exception en cas de division par 0
+    ou modulo par 0.
+*)
 let applyOp (op : op) 
             (val1 : Z.t) 
             (val2 : Z.t) 
@@ -25,6 +31,10 @@ let applyOp (op : op)
         else Z.rem val1 val2
 ;;
 
+(**
+    Fonction qui évalue une expression.
+*)
+
 let rec evalExpr (env: env list) 
                 (exp : expr)  
                 (pos : int)
@@ -44,6 +54,15 @@ let rec evalExpr (env: env list)
         applyOp op (evalExpr env exp1 pos) (evalExpr env exp2 pos) pos
 ;;
 
+(**
+    EVALUATION DE CONDITIONS
+*)
+
+(*---------------------------------------------------------------------------*)
+
+(**
+    Fonction qui évalue une comparaison
+*)
 let compare (comparison : comp) (val1 : Z.t) (val2 : Z.t) : bool =
     match comparison with
     | Eq -> Z.equal val1 val2
@@ -54,6 +73,9 @@ let compare (comparison : comp) (val1 : Z.t) (val2 : Z.t) : bool =
     | Ge -> Z.geq val1 val2
 ;;
 
+(**
+    Fonction qui évalue une condition
+*)
 let evalCond (env: env list) 
                 ((exp1, comparison, exp2) : cond) 
                 (pos : int)
@@ -67,7 +89,12 @@ let evalCond (env: env list)
 
 (**
     EVALUATION DES INSTRUCTIONS ET PROGRAMME
-    Chaque fonction renvoie un environnement
+    Chaque fonction prend et renvoie un environnement
+
+    Pour l'instant on n'utilise qu'un seul environnement :
+    Il n'y a donc pas de concept de variable locale,
+    elles sont toutes globales peut importe l'endroit où
+    elles sont déclarées.
 *)
 (*---------------------------------------------------------------------------*)
 

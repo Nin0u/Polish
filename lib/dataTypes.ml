@@ -9,7 +9,12 @@ type name = string
 (** Opérateurs arithmétiques : + - * / % *)
 type op = Add | Sub | Mul | Div | Mod
 
-(** Expressions arithmétiques *)
+(** 
+  Expressions arithmétiques 
+
+  Le type que contient Num a été changé pour implémenter
+  l'évaluation avec zarith.
+*)
 type expr =
   | Num of Z.t
   | Var of name
@@ -40,29 +45,32 @@ and block = (position * instr) list
 type program = block
 
 
-(** Structure de l'environnement lors de l'évaluation *)
+(** 
+  Structure de l'environnement lors de l'évaluation 
+
+  on utilise une donnée mutable pour éviter de créer et renvoyer
+  de nouveau environnements à chaque évaluation d'instruction.  
+*)
 type env = {
   varName : name;
   mutable value : Z.t
 }
+
 (** 
   EXCEPTIONS UTILES
-  chaque exception ayant un int conserve la ligne où s'est produite l'erreur
- *)
-
-exception Num_or_var
-
-exception Not_an_expression of int (* Pour readExpression dans readPolish.ml *)
-exception Not_a_condition of int   (* Pour readCondition dans readPolish.ml*)
-exception Arguments_error of int (** Pour READ *)
-
-(** 
-  Est levée quand une erreur se produit à l'affectation
-  se référer à la foncton readSet de readPolish
+  chaque exception ayant un int conserve la ligne où s'est produite l'erreur.
 *)
-exception Set_error of int
 
+(** Exceptions liées au parsing *)
+exception Not_an_expression of int
+exception Not_a_condition of int
+exception Set_error of int
+exception Arguments_error of int
+
+(** Exceptions d'environnement *)
 exception Varname_already_exists of int
 exception No_such_varName of name * int
+
+(** Exceptions Arithmétiques *)
 exception Division_by_zero of int
 exception Modulo_by_zero of int

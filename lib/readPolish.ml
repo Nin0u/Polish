@@ -6,7 +6,9 @@ open DataTypes
 
 (*---------------------------------------------------------------------------*)
 
-(** Fonction auxiliaire pour lire une ligne d'une entrée *)
+(** 
+    Fonction auxiliaire pour lire une ligne d'une entrée 
+*)
 let readLine (input : in_channel) : (string option) = 
     try 
         Some (input_line input) 
@@ -17,8 +19,11 @@ let readLine (input : in_channel) : (string option) =
 ;;
 
 (** 
-    Fonction qui stock les numéros des lignes 
+    Fonction qui stocke les numéros des lignes 
     ainsi que les contenus des lignes dans une liste.
+
+    Récursive terminale.
+    (boucle pour balayer toutes les lignes du fichier)
 *)
 let read (filename : string) : (position * string) list = 
     let file = open_in filename
@@ -31,17 +36,17 @@ let read (filename : string) : (position * string) list =
         loop [] 1
 ;;
 
-(*---------------------------------------------------------------------------*)
-
 (**
-    LECTURE DES EXPRESSIONS ET DES CONDITIONS ET DES ATTRIBUTIONS
+    LECTURE DES EXPRESSIONS, CONDITIONS, AFFECTATIONS
 *)
 
 (*---------------------------------------------------------------------------*)
 
 (**
-    Fonction associant une chaîne de caractères à un opérateur
-    Sauf les Num et les Var
+    Fonction associant un symbole à son opérateur.
+
+    Lève une exception si str n'est pas match
+    (Ce qui ne devrait JAMAIS arriver)
 *)
 let matchOp (str : string) : op =
     match str with
@@ -50,30 +55,31 @@ let matchOp (str : string) : op =
     | "*" -> Mul
     | "/" -> Div
     | "%" -> Mod 
-    | _ -> raise Num_or_var
+    | _ -> raise (Invalid_argument "Unmatched operator " ^ str)
 ;;
 
 (**
     Fonction qui teste si un tableau de mots constitue une expression.
-    Renvoie (expr * []) si c'est le cas et sinon lève une exception.
+
+    Renvoie un couple (expression,[]) si c'est le cas.
 *)
 let rec toExpression (words : string list) 
                         (pos : position)
                         : (expr * string list) = 
     match words with
     | [] -> raise (Not_an_expression pos)
-    | word :: resWords -> 
+    | word :: resWords ->
         match word with
-        | "+" | "-" | "*" | "/" | "%" ->   
+        | "+" | "-" | "*" | "/" | "%" ->
             let (expr1, residuals) = toExpression resWords pos
             in
                 let (expr2, residuals2) = toExpression residuals pos
                 in 
                     (Op(matchOp word,expr1,expr2),residuals2)
         | _ ->
-            try 
-                (Num(Z.of_string word),resWords) 
-            with 
+            try
+                (Num(Z.of_string word),resWords)
+            with
                 Invalid_argument _ -> (Var(word),resWords)
 ;;
 
@@ -119,7 +125,7 @@ let readCondition (words : string list) (pos : int): cond =
 
 (**
     Fonction qui teste si une ligne représente une affectation.
-    Lève le
+    Lève une exception sinon.
 *)
 let readSet (words : string list) (pos : int) : instr = 
     match words with
@@ -131,13 +137,18 @@ let readSet (words : string list) (pos : int) : instr =
     | _ -> raise (Set_error pos)
 ;;
 
+(** 
+    PARSING DES BLOCKS ET DES LIGNES
+*)
+
 (*---------------------------------------------------------------------------*)
 
 (** 
     Fonction qui renvoie l'indentation d'une ligne 
     ainsi que la liste des mots sans espaces.
 
-    On se fixe la taille d'une indentation à 2 espaces.
+    On se fixe la taille d'une indentation à 2 espaces
+    d'ou le /2 à la ligne 158.
 *) 
 let indentAndSplit (words: string) : (int * (string list)) = 
     let split = String.split_on_char ' ' words
@@ -152,12 +163,12 @@ let indentAndSplit (words: string) : (int * (string list)) =
         in loop 0 [] split
 ;;
 
-(** 
-    PARSING DES BLOCKS ET DES LIGNES
+(**
+    Fonction qui parse un block.
+
+    Récursivité terminale.
+    (balayage de toute les lignes)
 *)
-
-(*---------------------------------------------------------------------------*)
-
 let rec parseBlock (lines : (position * string) list) 
                 (indent : int)
                 : block * ((position * string) list) =    
@@ -180,6 +191,13 @@ let rec parseBlock (lines : (position * string) list)
                 else (List.rev acc, lines)
     in
         loop [] lines
+
+(**
+    Fonction qui parse une ligne.
+    En récursivité mutuelle avec parseBlock
+
+    renvoie un option pour traiter les lignes vides et les COMMENT
+*)
 
 and parseLine (pos : int)
                 (line : string list)
@@ -264,7 +282,9 @@ and elseBlock (ifRes : (position * string) list)
 ;;
 
 (**
-    Fonction qui parse le block entier.
+    Fonction qui parse le programme en entier.
+    C'est cette fonction qui va gérer 
+    toutes les exceptions levées par les fonctions auxiliaires
 *)
 let readProgram (lines : (position * string) list) : program=
     try
@@ -290,5 +310,4 @@ let readProgram (lines : (position * string) list) : program=
     Lit un fichier et le transforme en program
 *)
 
-let read_polish (filename:string) : program = readProgram(read filename) 
-;;
+let read_polish (filename:string) : program = readProgram(read filename) ;;
