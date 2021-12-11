@@ -62,10 +62,11 @@ type env = {
 *)
 
 (** Exceptions liées au parsing *)
-exception Not_an_expression of int
-exception Not_a_condition of int
-exception Set_error of int
-exception Arguments_error of int
+exception Not_an_expression of position
+exception Not_a_condition of position
+exception Set_error of position
+exception Arguments_error of position
+exception Unknown_instr of position
 
 (** Exceptions d'environnement *)
 exception Varname_already_exists of int
