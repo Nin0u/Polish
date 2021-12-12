@@ -4,6 +4,8 @@ open DataTypes
     AFFICHAGE DU PROGRAMME POLISH DEPUIS LISTE D'INSTRUCTIONS  
 *)
 
+(*---------------------------------------------------------------------------*)
+
 (** 
     Fonction qui prend un opérateur (op)
     et renvoie le string correspondant au caractère en Polish.
@@ -61,7 +63,8 @@ let rec indent_to_string (indent:int) : string = if indent>0
 
 (**
     Fonction qui prend une instruction et l'indentation attendue,
-    et print la bonne indentation suivi de l'équivalent Polish de l'instruction. 
+    et print la bonne indentation suivi 
+    de l'équivalent Polish de l'instruction. 
 *)
 let rec match_instr (ins:instr) (indent:int) : unit = 
 Printf.printf "%s" (indent_to_string indent);
@@ -69,13 +72,22 @@ match ins with
 | Set(n,e) -> Printf.printf "%s := %s\n" n (expr_to_string e)
 | Read(n) -> Printf.printf "READ %s\n" n
 | Print(e) -> Printf.printf "PRINT %s\n" (expr_to_string e)
-| If(c,b1,b2) -> Printf.printf "IF %s\n" (cond_to_string c) ; print_block b1 (indent+1) ;
-    if b2<>[] then (Printf.printf "%sELSE\n" (indent_to_string indent) ; print_block b2 (indent+1))
-| While(c,b) -> Printf.printf "WHILE %s\n" (cond_to_string c) ; print_block b (indent+1)
+| If(c,b1,b2) -> 
+    Printf.printf "IF %s\n" (cond_to_string c) ; 
+    print_block b1 (indent+1) ;
+    if b2 <> [] 
+    then (
+        Printf.printf "%sELSE\n" (indent_to_string indent) ; 
+        print_block b2 (indent+1)
+    )
+| While(c,b) -> 
+    Printf.printf "WHILE %s\n" (cond_to_string c) ; 
+    print_block b (indent+1)
 
 (**
     Fonction qui prend un bloc (block) de code et l'indentation attendue,
-    et l'envoie à la fonction ci-dessus pour qu'il soit print en Polish avec la bonne indentation.
+    et l'envoie à la fonction ci-dessus pour qu'il soit print en Polish 
+    avec la bonne indentation.
 *)
 and print_block (b:block) (indent:int) : unit = match b with 
 | [] -> ()
@@ -84,6 +96,7 @@ and print_block (b:block) (indent:int) : unit = match b with
 (** 
     Fonction de départ du fichier. 
     Prend un programme (program), c'est-à-dire un bloc (block) de code,
-    et l'envoie aux fonctions ci-dessus pour qu'il soit traduit et print correctement en Polish.
+    et l'envoie aux fonctions ci-dessus pour qu'il soit traduit 
+    et print correctement en Polish.
 *)
 let print_polish (p:program) : unit = print_block p 0 ;;
