@@ -1,6 +1,0 @@
-(executable
- (name testReadPolish)
- (flags :standard -w -27-26-32-33 \ -short-paths)
- (promote (until-clean))
- (libraries lib)
-)

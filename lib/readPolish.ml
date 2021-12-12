@@ -55,7 +55,7 @@ let matchOp (str : string) : op =
     | "*" -> Mul
     | "/" -> Div
     | "%" -> Mod 
-    | _ -> raise (Invalid_argument "Unmatched operator " ^ str)
+    | _ -> raise (Invalid_argument ("Unmatched operator " ^ str))
 ;;
 
 (**
