@@ -68,6 +68,7 @@ exception Not_an_operation of position
 exception Not_an_instr of position
 exception Set_error of position
 exception Arguments_error of position
+exception Indentation_error of position
 
 (** Exceptions d'environnement *)
 exception Varname_already_exists of int

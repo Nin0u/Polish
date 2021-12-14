@@ -101,7 +101,7 @@ let evalCond (env: env list)
 (**
     Fonction qui traite l'instruction SET
 *)
-let handleSet (env : env list) 
+let evalSet (env : env list) 
                 (varName : name)
                 (exp : expr)
                 (pos : int) 
@@ -124,7 +124,7 @@ let handleSet (env : env list)
 (**
     Fonction qui traite l'instruction READ
 *)
-let handleRead (env : env list)
+let evalRead (env : env list)
                 (varName : name)  
                 (pos : int) 
                 : env list =
@@ -144,7 +144,7 @@ let handleRead (env : env list)
 (**
     Fonction qui traite l'instruction PRINT
 *)
-let handlePrint (env : env list) 
+let evalPrint (env : env list) 
                     (exp : expr)  
                     (pos : int) 
                     : env list =
@@ -156,7 +156,7 @@ let handlePrint (env : env list)
 (**
     Fonction qui traite l'instruction IF
 *)
-let rec handleIf (env: env list) 
+let rec evalIf (env: env list) 
                 (condition : cond)
                 (blk1 : block)
                 (blk2 : block)
@@ -171,7 +171,7 @@ let rec handleIf (env: env list)
 (**
     Fonction qui traite l'instruction WHILE
 *)
-and handleWhile (env: env list) 
+and evalWhile (env: env list) 
                 (condition : cond)
                 (blk : block)
                 (pos : int)
@@ -180,7 +180,7 @@ and handleWhile (env: env list)
     in
         if b
         then
-            handleWhile (evalBlock env blk) condition blk pos
+            evalWhile (evalBlock env blk) condition blk pos
         else 
             env
 
@@ -192,11 +192,11 @@ and evalInstr (env : env list)
                 (instr : instr) 
                 : env list =
     match instr with
-    | Set(varName, exp) -> handleSet env varName exp pos
-    | Read(varName) -> handleRead env varName pos
-    | Print(exp) -> handlePrint env exp pos
-    | If(condition, blk1, blk2) -> handleIf env condition blk1 blk2 pos
-    | While (condition, blk) -> handleWhile env condition blk pos
+    | Set(varName, exp) -> evalSet env varName exp pos
+    | Read(varName) -> evalRead env varName pos
+    | Print(exp) -> evalPrint env exp pos
+    | If(condition, blk1, blk2) -> evalIf env condition blk1 blk2 pos
+    | While (condition, blk) -> evalWhile env condition blk pos
 
 (**
     Fonction qui traite un bloc

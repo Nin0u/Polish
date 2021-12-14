@@ -42,6 +42,23 @@ let read (filename : string) : (position * string) list =
 
 (*---------------------------------------------------------------------------*)
 
+(** Fonction qui test si un mot est un nombre *)
+let isNum (word : string) : bool =
+    try
+        match Z.of_string(word) with 
+        | _ -> true
+    with Invalid_argument _ -> false
+        
+
+(**
+    Fonction qui test si un mot peut être asocié à une instruction
+*)
+let isInstr (word : string) : bool = 
+    match word with 
+    | "COMMENT" | "READ" | "PRINT" | "IF" | "WHILE" -> true
+    | _ -> false
+;;
+
 (**
     Fonction associant un symbole à son opérateur.
 
@@ -67,7 +84,7 @@ let rec toExpression (words : string list)
                         (pos : position)
                         : (expr * string list) = 
     match words with
-    | [] -> raise (Not_an_expression pos)
+    | [] -> raise (Arguments_error pos)
     | word :: resWords ->
         match word with
         | "+" | "-" | "*" | "/" | "%" ->
@@ -80,7 +97,11 @@ let rec toExpression (words : string list)
             try
                 (Num(Z.of_string word),resWords)
             with
-                Invalid_argument _ -> (Var(word),resWords)
+                Invalid_argument _ -> 
+                    if isInstr word
+                    then raise (Not_an_expression pos)
+                    else (Var(word),resWords)
+                    
 ;;
 
 (**
@@ -111,16 +132,18 @@ let readCondition (words : string list) (pos : int): cond =
         match residuals with 
         | [] -> raise (Not_a_condition pos)
         | res :: resRes ->
-            let (expr2) = readExpression resRes pos
-            in 
-                match res with
-                | "=" -> (expr1,Eq,expr2)
-                | "<>" -> (expr1,Ne,expr2)
-                | "<" -> (expr1,Lt,expr2)
-                | "<=" -> (expr1,Le,expr2)
-                | ">" -> (expr1,Gt,expr2)
-                | ">=" -> (expr1,Ge,expr2)
-                | _ -> raise (Not_a_condition pos)
+            try
+                let (expr2) = readExpression resRes pos
+                in 
+                    match res with
+                    | "=" -> (expr1,Eq,expr2)
+                    | "<>" -> (expr1,Ne,expr2)
+                    | "<" -> (expr1,Lt,expr2)
+                    | "<=" -> (expr1,Le,expr2)
+                    | ">" -> (expr1,Gt,expr2)
+                    | ">=" -> (expr1,Ge,expr2)
+                    | _ -> raise (Not_a_condition pos)
+            with Not_an_expression pos -> raise(Not_a_condition pos)
 ;;
 
 (**
@@ -130,7 +153,7 @@ let readCondition (words : string list) (pos : int): cond =
 let readSet (words : string list) (pos : int) : instr = 
     match words with
     | s :: ":=" :: tail -> 
-        if s = ""
+        if s = "" || isNum s
         then raise (Set_error pos)
         else
             Set(s,readExpression tail pos)
@@ -150,18 +173,22 @@ let readSet (words : string list) (pos : int) : instr =
     On se fixe la taille d'une indentation à 2 espaces
     d'ou le /2 à la ligne 158.
 *) 
-let indentAndSplit (words: string) : (int * (string list)) = 
+let indentAndSplit (words: string) (pos : position): (int * (string list)) = 
     let split = String.split_on_char ' ' words
     in
         let rec loop accIndent accSplit split=
             match split with
-            | [] -> (accIndent /2 , List.rev accSplit)
+            | [] -> 
+                if accIndent mod 2 <> 0
+                then raise (Indentation_error pos)
+                else (accIndent /2 , List.rev accSplit)
             | word :: resWords -> 
                 if word = "" 
                 then loop (1 + accIndent) (accSplit) resWords
                 else loop (accIndent) (word :: accSplit) resWords
         in loop 0 [] split
 ;;
+
 
 (**
     Fonction qui parse un block.
@@ -176,7 +203,7 @@ let rec parseBlock (lines : (position * string) list)
         match lines with
         | [] -> (List.rev acc,[])
         | (pos,str) :: resLines ->
-            let (ind,split) = indentAndSplit str
+            let (ind,split) = indentAndSplit str pos
             in
                 if ind = indent 
                 then 
@@ -210,22 +237,24 @@ and parseLine (pos : int)
     | word :: resWords -> 
         match word with
         | "COMMENT" -> None
-        | "READ" ->
+        | "READ" -> 
             if List.length resWords = 1
             then 
-                Some(
-                    (pos,Read(List.hd resWords))
-                    , resLines
-                )
+                let hd = List.hd resWords
+                in 
+                    if isInstr hd
+                    then raise (Arguments_error pos)
+                    else 
+                        Some(
+                            (pos,Read(hd))
+                            ,resLines
+                        )
             else raise (Arguments_error pos)
-                
-
         | "PRINT" ->
             Some(
                 (pos,Print(readExpression resWords pos))
                 ,resLines
             )
-
         | "IF" -> 
             (
             let (ifBlock,ifRes) = parseBlock resLines (indent+1)
@@ -261,8 +290,8 @@ and elseBlock (ifRes : (position * string) list)
                 : block * ((position * string) list) =
     match ifRes with
     | [] -> ([],[])
-    | (_,line) :: resLines ->
-        let (ind,split) = indentAndSplit line
+    | (pos,line) :: resLines ->
+        let (ind,split) = indentAndSplit line pos
         in 
             if ind = indent
             then
@@ -291,7 +320,10 @@ let readProgram (lines : (position * string) list) : program=
         let (program,residuals) = parseBlock lines 0
         in
             if residuals != []
-            then (Printf.printf "Parsing error\n"; exit(-1))
+            then (
+                Printf.printf "Parsing error. Please check the indents\n"; 
+                exit(-1)
+            )
             else program
     with
         | Not_an_expression pos -> 
@@ -302,6 +334,8 @@ let readProgram (lines : (position * string) list) : program=
             Printf.printf "Argument error at line %d\n" pos; exit (-1)
         | Set_error pos -> 
             Printf.printf "Set error at line %d\n" pos; exit (-1)
+        | Indentation_error pos ->
+            Printf.printf "Indentation error at line %d\n" pos; exit (-1)
 
 (*---------------------------------------------------------------------------*)
  
