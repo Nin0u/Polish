@@ -128,7 +128,7 @@ let evalRead (env : env list)
                 (varName : name)  
                 (pos : int) 
                 : env list =
-    print_string (varName ^ "?\n");
+    print_string (varName ^ "? ");
     let n = Z.of_string (read_line())
     in 
         try
