@@ -176,7 +176,7 @@ let readSet (words : string list) (pos : int) : instr =
 let indentAndSplit (words: string) (pos : position): (int * (string list)) = 
     let split = String.split_on_char ' ' words
     in
-        let rec loop accIndent accSplit split=
+        let rec loop accIndent accSplit stopCountIndent split=
             match split with
             | [] -> 
                 if accIndent mod 2 <> 0
@@ -184,9 +184,12 @@ let indentAndSplit (words: string) (pos : position): (int * (string list)) =
                 else (accIndent /2 , List.rev accSplit)
             | word :: resWords -> 
                 if word = "" 
-                then loop (1 + accIndent) (accSplit) resWords
-                else loop (accIndent) (word :: accSplit) resWords
-        in loop 0 [] split
+                then 
+                    if stopCountIndent
+                    then loop (accIndent) (accSplit) true resWords
+                    else loop (1 + accIndent) (accSplit) false resWords
+                else loop (accIndent) (word :: accSplit) true resWords
+        in loop 0 [] false split
 ;;
 
 
