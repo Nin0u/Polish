@@ -1,5 +1,4 @@
 (** Projet Polish -- Analyse statique d'un mini-langage impératif *)
-open Lib.DataTypes
 open Lib.ReadPolish
 open Lib.PrintPolish
 open Lib.EvalPolish
@@ -16,7 +15,7 @@ let main () =
   match Sys.argv with
   | [|_;"--reprint";file|] -> print_polish (read_polish file)
   | [|_;"--eval";file|] -> eval_polish (read_polish file)
-  | [|_;"--simpl";file|] -> print_polish (simpl_poish (read_poish file))
+  | [|_;"--simpl";file|] -> print_polish (simpl_polish (read_polish file))
   | [|_;"--vars";file|] -> ()
   | [|_;"--sign";file|] -> ()
   | _ -> usage ()
