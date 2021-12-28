@@ -1,5 +1,5 @@
-COMMENT simplification des expressions
-IF * 2 3 = + 3 3
+COMMENT vide après eliminations
+IF * 2 3 = + 3 4
   IF + 1 1 <= * 8 2
     PRINT / 9 3
   ELSE

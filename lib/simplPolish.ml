@@ -88,4 +88,65 @@ and simplBlock (b : block) : block =
         loop [] b
 ;;
 
-let simpl_polish (p : program) = simplBlock p;;
+(**
+    ELIMINATION DES BLOCS
+*)
+let compare (n : Z.t) (m : Z.t) (cmp : comp) : bool option =
+    match cmp with
+    | Eq -> Some(Z.equal n m)
+    | Ne -> Some(not (Z.equal n m))
+    | Lt -> Some(Z.lt n m)
+    | Le -> Some(Z.leq n m)
+    | Gt -> Some(Z.gt n m)
+    | Ge -> Some(Z.geq n m)
+
+let elimCond ((e1,cmp,e2) : cond) : bool option = 
+    match e1,e2 with
+    | Num(n),Num(m) -> compare n m cmp
+    | _ , _ -> None
+
+
+let add (pos : position) (b : block) (acc : block) : block =
+    let rec loop pos acc b =
+        match b with
+        | [] -> acc
+        | (_,instr) :: res -> loop (pos + 1) ((pos,instr) :: acc) res
+    in 
+        loop pos acc b
+
+let rec elimInstr (pos : position) (instr : instr) : block =
+    match instr with
+    | If(c,b1,b2) -> 
+        (
+        match elimCond c with
+        | None -> [(pos,instr)]
+        | Some(b) -> 
+            if b
+            then elimBlock b1
+            else elimBlock b2
+        )
+    | While (c,bl) ->
+        (
+        match elimCond c with
+        | None -> [(pos,While(c, simplBlock bl))]
+        | Some(b) -> 
+            if b 
+            then [(pos,instr)]
+            else []
+        )
+    | _ -> [(pos,instr)]
+        
+
+and elimBlock (b : block) : block = 
+    let rec loop acc b =
+        match b with
+        | [] -> List.rev acc
+        | (pos,instr) :: res -> 
+            let bl = elimInstr pos instr 
+            in 
+                loop (add pos bl acc) res
+    in
+        loop [] b
+;;
+
+let simpl_polish (p : program) = elimBlock (simplBlock p);;
