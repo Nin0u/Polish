@@ -128,10 +128,10 @@ let rec elimInstr (pos : position) (instr : instr) : block =
     | While (c,bl) ->
         (
         match elimCond c with
-        | None -> [(pos,While(c, simplBlock bl))]
+        | None -> [(pos,While(c, elimBlock bl))]
         | Some(b) -> 
             if b 
-            then [(pos,instr)]
+            then [(pos,While(c, elimBlock bl))]
             else []
         )
     | _ -> [(pos,instr)]
