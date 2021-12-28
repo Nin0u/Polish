@@ -343,7 +343,7 @@ let readProgram (lines : (position * string) list) : program=
 (*---------------------------------------------------------------------------*)
  
 (**
-    FONCTION read_polish à implémenter :
+    Fonction read_polish à implémenter :
     Lit un fichier et le transforme en program
 *)
 

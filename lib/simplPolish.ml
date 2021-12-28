@@ -6,6 +6,9 @@ open DataTypes
 
 (*---------------------------------------------------------------------------*)
 
+(**
+    Simplification de somme
+*)
 let rec simplAdd (e1 : expr) (e2 : expr) : expr = 
     match e1,e2 with
         | Num(n),e2 when n = Z.zero -> e2
@@ -13,12 +16,18 @@ let rec simplAdd (e1 : expr) (e2 : expr) : expr =
         | Num(n) , Num(m) -> Num(Z.add n m)
         | _ -> Op(Add,e1,e2)
 
+(**
+    Simplification de différence
+*)
 and simplSub (e1 : expr) (e2 : expr) : expr =
     match e1,e2 with
     | e1, Num(n) when n = Z.zero -> e1
     | Num(n),Num(m) -> Num(Z.sub n m)
     | _ -> Op(Sub,e1,e2)
 
+(**
+    Simplification de produit
+*)
 and simplMul (e1 : expr) (e2 : expr) : expr =
     match e1,e2 with
     | Num(n), _ when n = Z.zero -> Num(Z.zero)
@@ -30,6 +39,9 @@ and simplMul (e1 : expr) (e2 : expr) : expr =
     | Num(n),Num(m) -> Num (Z.mul n m)
     | _ -> Op(Mul,e1,e2)
 
+(**
+    Simplification de division et modulo
+*)
 and simplDivOrMod (o : op) (e1 : expr) (e2 : expr) : expr =
     match e1,e2 with
     | Num(n),_ when n = Z.zero -> Num(Z.zero)
@@ -53,6 +65,9 @@ and simplDivOrMod (o : op) (e1 : expr) (e2 : expr) : expr =
         | Mod -> Op(Mod,e1,e2)
         | _ -> failwith "ERROR : called simplDivOrMod on another operator"
 
+(**
+    Simplification d'un opérateur
+*)
 and simplOp (o : op) (e1 : expr) (e2 : expr) : expr =
     match o with
     | Add -> simplAdd e1 e2
@@ -60,16 +75,25 @@ and simplOp (o : op) (e1 : expr) (e2 : expr) : expr =
     | Mul -> simplMul e1 e2
     | Div | Mod -> simplDivOrMod o e1 e2
 
+(**
+    Simplification d'une expression
+*)
 and simplExpr (e : expr) : expr =
     match e with
     | Op(o,e1,e2) -> simplExpr(simplOp o (simplExpr e1) (simplExpr e2))
     | _ -> e
 ;;
 
+(**
+    Simplification d'une condition
+*)
 let simplCond ((e1,c,e2): cond) : cond =
     (simplExpr e1,c,simplExpr e2)
 ;;
 
+(**
+    Simplification d'une instruction
+*)
 let rec simplInst (instr : instr) : instr =
     match instr with 
     | Set(n,e) -> Set(n, simplExpr e) 
@@ -78,6 +102,9 @@ let rec simplInst (instr : instr) : instr =
     | While(c,b) -> While(simplCond c, simplBlock b)
     | _ -> instr
 
+(**
+    Simplification d'un bloc
+*)
 and simplBlock (b : block) : block = 
     let rec loop acc b = 
         match b with
@@ -91,6 +118,11 @@ and simplBlock (b : block) : block =
 (**
     ELIMINATION DES BLOCS
 *)
+
+(**
+    Fonction qui applique la comparaison entre deux nombres
+    Renvoie un booleen
+*)
 let compare (n : Z.t) (m : Z.t) (cmp : comp) : bool option =
     match cmp with
     | Eq -> Some(Z.equal n m)
@@ -100,12 +132,20 @@ let compare (n : Z.t) (m : Z.t) (cmp : comp) : bool option =
     | Gt -> Some(Z.gt n m)
     | Ge -> Some(Z.geq n m)
 
+(**
+    Fonction qui elimine une condition
+    Renvoie Some(bool) si la condition peut-être éliminée
+    Renvoie None sinon
+*)
 let elimCond ((e1,cmp,e2) : cond) : bool option = 
     match e1,e2 with
     | Num(n),Num(m) -> compare n m cmp
     | _ , _ -> None
 
 
+(**
+    Fonction qui ajoute les lignes d'un bloc dans un autre
+*)
 let add (pos : position) (b : block) (acc : block) : block =
     let rec loop pos acc b =
         match b with
@@ -114,6 +154,17 @@ let add (pos : position) (b : block) (acc : block) : block =
     in 
         loop pos acc b
 
+(**
+    Fonction qui elimine les blocs en cas de comapraisons entre constantes
+    dans des conditions.
+
+    Pour IF : si la condition est vrai on elimine le bloc ELSE 
+    Sinon on elimine le bloc IF
+
+    Pour WHILE : si la condition est fausse on élimine le bloc
+    Sinon on a une boucle infinie et on garde le bloc
+
+*)
 let rec elimInstr (pos : position) (instr : instr) : block =
     match instr with
     | If(c,b1,b2) -> 
@@ -136,7 +187,9 @@ let rec elimInstr (pos : position) (instr : instr) : block =
         )
     | _ -> [(pos,instr)]
         
-
+(**
+    Fonction qui parcours le bloc pour eliminer ceux qui peuvent être eliminés
+*)
 and elimBlock (b : block) : block = 
     let rec loop acc b =
         match b with
@@ -149,4 +202,7 @@ and elimBlock (b : block) : block =
         loop [] b
 ;;
 
+(**
+    Fonction qui simplifie le code et elimine les blocs morts
+*)
 let simpl_polish (p : program) = elimBlock (simplBlock p);;
