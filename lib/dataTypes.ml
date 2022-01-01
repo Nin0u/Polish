@@ -56,6 +56,11 @@ type env = {
   mutable value : Z.t
 }
 
+(**
+  Structure utilisée pour varsPolish
+*)
+module Names = Set.Make(String)
+
 (** 
   EXCEPTIONS UTILES
   chaque exception ayant un int conserve la ligne où s'est produite l'erreur.
