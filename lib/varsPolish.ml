@@ -40,9 +40,17 @@ let rec varsInstr (instr : instr)
         (
         let (a,i) = varsExpr e allVars initVars
         in 
-            (Names.add n a,Names.add n i)
+            match Names.find_opt n a with
+            | None -> (Names.add n a,Names.add n i)
+            | _ -> (a,i)
         )
-    | Read(n) -> (Names.add n allVars, Names.add n initVars)
+
+    | Read(n) -> 
+        (
+            match Names.find_opt n allVars with
+            | None -> (Names.add n allVars, Names.add n initVars)
+            | _ -> (allVars, initVars)
+        )
     | Print(e) -> varsExpr e allVars initVars
     | If(c,b1,b2) ->
         (
@@ -87,6 +95,9 @@ let printSet (set : Names.t) =
     print_string "\n"
 ;;
 
+(**
+    Fonction qui exécute --vars
+*)
 let vars_polish (p : program) : unit =
     let (allVars, initVars) = varsBlock p Names.empty Names.empty
     in 
