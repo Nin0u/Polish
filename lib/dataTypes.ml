@@ -56,6 +56,17 @@ type env = {
   mutable value : Z.t
 }
 
+type sign =
+| Neg
+| Zero
+| Pos
+| Error of int
+
+type env_sign = {
+  varName : name;
+  mutable varSign : sign list;
+}
+
 (**
   Structure utilisée pour varsPolish
 *)
