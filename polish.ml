@@ -13,7 +13,7 @@ let usage () =
   print_string "  --eval <fichier Polish> : évalue le programme Polish donné.\n";
   print_string "  --simpl <fichier Polish> : Simplification du programme en effectuant une propagation des constantes et en éliminant les blocs “morts”.\n";
   print_string "  --vars <fichier Polish> : Calcul statique des variables risquant d’être accédées avant d’être écrites.\n";
-  print_string "  --sign <fichier Polish> : Analyse statique du signe possible des variables lors du déroulement du programme, détermination du risque de division par zéro.\n\n"
+  print_string "  --sign <fichier Polish> : [Pas entièrement opérationnel !] Analyse statique du signe possible des variables lors du déroulement du programme, détermination du risque de division par zéro.\n\n"
 ;;
 
 let main () =
