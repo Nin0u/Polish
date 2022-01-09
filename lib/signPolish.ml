@@ -11,8 +11,38 @@ open DataTypes
 
 (*---------------------------------------------------------------------------*)
 
+(**
+    Prend deux sign list et renvoie l'union de leur champ Error dans une liste
+    Si aucun n'a Error, rend []. Si l'un des deux a Error, le renvoie.
+    Si les deux ont un Error, renvoie celui à l'int le plus petit.
+ *)
+let rec union_error (sl1 : sign list) (sl2 : sign list) : sign list =
+match sl1 with
+| (Error a) :: lr1 ->
+    (match sl2 with 
+    | (Error b) :: lr2 -> if a<b then [(Error a)] else [(Error b)]
+    | b :: lr2 -> union_error [(Error a)] lr2
+    | [] -> [(Error a)] )
+| a :: lr1 -> union_error lr1 sl2
+| [] ->
+    (match sl2 with
+    | (Error b) :: lr2 -> [(Error b)]
+    | b :: lr2 -> union_error [] lr2
+    | [] -> [])
+;;
+
+(** 
+    Prend deux sign list et en fait l'union 
+    On évite les duplicata (si les deux listes ont Pos, le return a 1 Pos)
+    Et pour Error, on garde le Error à valeur int la plus faible 
+    (on veut montrer l'erreur le plus tôt possible)
+ *)
 let union_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
-    
+    (if (List.mem Neg sl1) || (List.mem Neg sl2) then [Neg] else []) @
+    (if (List.mem Zero sl1) || (List.mem Zero sl2) then [Zero] else []) @
+    (if (List.mem Pos sl1) || (List.mem Pos sl2) then [Pos] else []) @
+    (union_error sl1 sl2)
+;;
 
 (**
     Prend un name et une env_sign list, et regarde si
@@ -26,19 +56,128 @@ match el with
 | [] -> []
 | e :: elr -> if e.varName=n then [e] else look_for_varname n elr ;;
 
+(* ============================== CONTAINS ==============================*)
+
+let rec contains_neg (sl : sign list) : bool =
+match sl with
+| Neg :: lr -> true
+| _ :: lr -> contains_neg lr
+| [] -> false
+;;
+
+let rec contains_zero (sl : sign list) : bool =
+match sl with
+| Zero :: lr -> true
+| _ :: lr -> contains_zero lr
+| [] -> false
+;;
+
+let rec contains_pos (sl : sign list) : bool =
+match sl with
+| Pos :: lr -> true
+| _ :: lr -> contains_pos lr
+| [] -> false
+;;
+
+(* ============================== MOD ==============================*)
+
+let mod_signlist (sl1 : sign list) (sl2 : sign list) (po:position) : sign list =
+    (if ((contains_neg sl1) && (contains_neg sl2)) ||
+        ((contains_pos sl1) && (contains_neg sl2)) then [Neg] else []) @
+
+    (if ((contains_zero sl1) && (contains_pos sl2)) ||
+        ((contains_zero sl1) && (contains_neg sl2)) then [Zero] else []) @
+
+    (if ((contains_neg sl1) && (contains_pos sl2)) ||
+        ((contains_pos sl1) && (contains_pos sl2)) then [Pos] else []) @
+
+    (union_error (union_error sl1 sl2) 
+        (if (contains_zero sl2) then [Error(po)] else []))
+;;
+
+(* ============================== DIV ==============================*)
+
+let div_signlist (sl1 : sign list) (sl2 : sign list) (po:position) : sign list =
+    (if ((contains_neg sl1) && (contains_pos sl2)) ||
+        ((contains_pos sl1) && (contains_neg sl2)) then [Neg] else []) @
+
+    (if ((contains_zero sl1) && (contains_pos sl2)) ||
+        ((contains_zero sl1) && (contains_neg sl2)) then [Zero] else []) @
+
+    (if ((contains_neg sl1) && (contains_neg sl2)) ||
+        ((contains_pos sl1) && (contains_pos sl2)) then [Pos] else []) @
+
+    (union_error (union_error sl1 sl2) 
+        (if (contains_zero sl2) then [Error(po)] else []))
+;;
+
+(* ============================== MUL ==============================*)
+
+let mul_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
+    (if ((contains_neg sl1) && (contains_pos sl2)) ||
+        ((contains_pos sl1) && (contains_neg sl2)) then [Neg] else []) @
+
+    (if ((contains_zero sl1) || (contains_zero sl2)) then [Zero] else []) @
+
+    (if ((contains_neg sl1) && (contains_neg sl2)) ||
+        ((contains_pos sl1) && (contains_pos sl2)) then [Pos] else []) @
+
+    (union_error sl1 sl2)
+;;
+
+(* ============================== SUB ==============================*)
+
+let sub_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
+    (if (contains_neg sl1) || (contains_pos sl2) then [Neg] else []) @
+
+    (if ((contains_zero sl1) && (contains_zero sl2)) || 
+        ((contains_neg sl1) && (contains_pos sl2)) ||
+        ((contains_pos sl1) && (contains_neg sl2)) then [Zero] else []) @
+    
+    (if (contains_pos sl1) || (contains_neg sl2) then [Pos] else []) @
+
+    (union_error sl1 sl2)    
+;;
+
+(* ============================== ADD ==============================*)
+
+let add_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
+    (if (contains_neg sl1) || (contains_neg sl2) then [Neg] else []) @
+
+    (if ((contains_zero sl1) && (contains_zero sl2)) || 
+        ((contains_neg sl1) && (contains_pos sl2)) ||
+        ((contains_pos sl1) && (contains_neg sl2)) then [Zero] else []) @
+
+    (if (contains_pos sl1) || (contains_pos sl2) then [Pos] else []) @
+
+    (union_error sl1 sl2)    
+;;
+
+(* ============================== Reste ==============================*)
+
 (**
     Prend une expr et une env_sign list, et rend une sign list.
     concrètement : analyse l'expression et en déduit le varSign (sign list) 
     de la variable pour qui cette fonction a été appellée 
+
+    TODO : si l'une des variables concernée n'a QUE Error et ni pos ni neg ni zero, 
+        pour match |Op il faudra rendre Error uniquement
+        (((1 + Error = [Error], et pas [Pos,Error])))
  *)
-let expr_to_signlist (pos : position) (e : expr) (env : env_sign list) : sign list = 
+let rec expr_to_signlist (po : position) (e : expr) (env : env_sign list) : sign list = 
 match e with 
 | Num(z) -> let i = (Z.to_int z) in
     if i>0 then [Pos] else if i==0 then [Zero] else [Neg]
 | Var(n) -> (match (look_for_varname n env) with
     | [var] -> var.varSign
     | _ -> raise (Var_never_initialized n) )
-| Op(o,e1,o2) -> [] ;; (*TODO*)
+| Op(o,e1,e2) -> (match o with 
+    | Add -> add_signlist (expr_to_signlist po e1 env) (expr_to_signlist po e2 env)
+    | Sub -> sub_signlist (expr_to_signlist po e1 env) (expr_to_signlist po e2 env)
+    | Mul -> mul_signlist (expr_to_signlist po e1 env) (expr_to_signlist po e2 env)
+    | Div -> div_signlist (expr_to_signlist po e1 env) (expr_to_signlist po e2 env) po
+    | Mod -> mod_signlist (expr_to_signlist po e1 env) (expr_to_signlist po e2 env) po )
+;; 
 
 (**
     Prend une position, une instr (ligne de code), et env_sign list
@@ -50,7 +189,10 @@ match ins with
     (match look_for_varname n el with
     | [var] -> var.varSign <- (expr_to_signlist pos e el); el
     | _ -> {varName = n; varSign = (expr_to_signlist pos e el)} :: el)
-| Read(n) -> el (*TODO*)
+| Read(n) ->
+    (match look_for_varname n el with
+    | [var] -> var.varSign <- Neg :: Zero :: Pos :: [] ; el
+    | _ -> {varName = n; varSign = (Neg :: Zero :: Pos :: [])} :: el)
 | Print(e) -> el (*TODO*)
 | If (c,b1,b2) -> el (*TODO*)
 | While (c,b) -> el (*TODO*)
