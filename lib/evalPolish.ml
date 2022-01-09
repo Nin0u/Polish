@@ -35,7 +35,7 @@ let applyOp (op : op)
     Fonction qui évalue une expression.
 *)
 
-let rec evalExpr (env: env list) 
+let rec evalExpr (env: env list)
                 (exp : expr)  
                 (pos : int)
                 : Z.t =
@@ -44,7 +44,7 @@ let rec evalExpr (env: env list)
     | Var(s) -> 
         (
         try 
-            let elem = List.find (fun x -> x.varName = s) env
+            let elem = List.find (fun x -> x.vName = s) env
             in 
                 elem.value 
         with
@@ -102,21 +102,21 @@ let evalCond (env: env list)
     Fonction qui traite l'instruction SET
 *)
 let evalSet (env : env list) 
-                (varName : name)
+                (vName : name)
                 (exp : expr)
                 (pos : int) 
                 : env list =
     let e = evalExpr env exp pos
     in
         try
-            let elem = List.find (fun x -> x.varName = varName) env
+            let elem = List.find (fun x -> x.vName = vName) env
             in 
                 elem.value <- e;
                 env
             
         with Not_found -> 
             { 
-                varName = varName;
+                vName = vName;
                 value = e
             } :: env
 ;;
@@ -125,18 +125,18 @@ let evalSet (env : env list)
     Fonction qui traite l'instruction READ
 *)
 let evalRead (env : env list)
-                (varName : name)  
+                (vName : name)  
                 (pos : int) 
                 : env list =
-    print_string (varName ^ "? ");
+    print_string (vName ^ "? ");
     let n = Z.of_string (read_line())
     in 
         try
-           match List.find (fun x -> x.varName = varName) env with
+           match List.find (fun x -> x.vName = vName) env with
            | _ -> raise (Varname_already_exists pos)
         with Not_found -> 
         {
-            varName = varName;
+            vName = vName;
             value = n
         } :: env
 ;;
@@ -192,8 +192,8 @@ and evalInstr (env : env list)
                 (instr : instr) 
                 : env list =
     match instr with
-    | Set(varName, exp) -> evalSet env varName exp pos
-    | Read(varName) -> evalRead env varName pos
+    | Set(vName, exp) -> evalSet env vName exp pos
+    | Read(vName) -> evalRead env vName pos
     | Print(exp) -> evalPrint env exp pos
     | If(condition, blk1, blk2) -> evalIf env condition blk1 blk2 pos
     | While (condition, blk) -> evalWhile env condition blk pos

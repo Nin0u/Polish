@@ -52,8 +52,19 @@ type program = block
   de nouveau environnements à chaque évaluation d'instruction.  
 *)
 type env = {
-  varName : name;
+  vName : name; (** Nom de la variable *)
   mutable value : Z.t
+}
+
+type sign =
+| Neg
+| Zero
+| Pos
+| Error of int
+
+type env_sign = {
+  varName : name;
+  mutable varSign : sign list
 }
 
 (**
@@ -78,6 +89,7 @@ exception Indentation_error of position
 (** Exceptions d'environnement *)
 exception Varname_already_exists of int
 exception No_such_varName of name * int
+exception Var_never_initialized of name
 
 (** Exceptions Arithmétiques *)
 exception Division_by_zero of int
