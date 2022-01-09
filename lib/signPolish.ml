@@ -6,7 +6,7 @@ open DataTypes
     --         lors du déroulement du programme,        --
     --   détermination du risque de division par zéro.  --
 
-    /!\ NON FINI !
+    /!\ NON TERMINE il manque un détail au IF, et WHILE 
 *)
 
 (*---------------------------------------------------------------------------*)
@@ -18,16 +18,16 @@ open DataTypes
  *)
 let rec union_error (sl1 : sign list) (sl2 : sign list) : sign list =
 match sl1 with
-| (Error a) :: lr1 ->
+| (Error a) :: _ ->
     (match sl2 with 
-    | (Error b) :: lr2 -> if a<b then [(Error a)] else [(Error b)]
-    | b :: lr2 -> union_error [(Error a)] lr2
+    | (Error b) :: _ -> if a<b then [(Error a)] else [(Error b)]
+    | _ :: lr2 -> union_error [(Error a)] lr2
     | [] -> [(Error a)] )
-| a :: lr1 -> union_error lr1 sl2
+| _ :: lr1 -> union_error lr1 sl2
 | [] ->
     (match sl2 with
-    | (Error b) :: lr2 -> [(Error b)]
-    | b :: lr2 -> union_error [] lr2
+    | (Error b) :: _ -> [(Error b)]
+    | _ :: lr2 -> union_error [] lr2
     | [] -> [])
 ;;
 
@@ -54,32 +54,66 @@ let union_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
 let rec look_for_varname (n:name) (el: env_sign list) : env_sign list = 
 match el with
 | [] -> []
-| e :: elr -> if e.varName=n then [e] else look_for_varname n elr ;;
+| e :: elr -> if e.varName=n then [e] else look_for_varname n elr 
+;;
+
+(**
+    NON TERMINE
+    Fait l'union de deux env_sign list, utile par exemple suite à l'analyse 
+    de deux blocs if
+ *)
+let union_envsignlist (_:env_sign list) (_:env_sign list) : env_sign list = []
+(*  TODO finir derniers détails
+
+let rec loop el1 el2 acc =
+    match el1 with 
+    | [] -> []
+    | e :: lr1 ->
+        let f = look_for_varname e.varName el2 in 
+        match f with 
+        |[] -> loop lr1 el2 
+        |
+        {varName=e.varName; 
+        varSign=(union_signlist e.varSign (look_for_varname e.varName el2).varSign)} :: acc
+in loop el1 el2 []*)
+;;
 
 (* ============================== CONTAINS ==============================*)
 
+(**
+    Prend une sign list, et teste si elle contient Neg
+ *)
 let rec contains_neg (sl : sign list) : bool =
 match sl with
-| Neg :: lr -> true
+| Neg :: _ -> true
 | _ :: lr -> contains_neg lr
 | [] -> false
 ;;
 
+(**
+    Prend une sign list, et teste si elle contient Zero
+ *)
 let rec contains_zero (sl : sign list) : bool =
 match sl with
-| Zero :: lr -> true
+| Zero :: _ -> true
 | _ :: lr -> contains_zero lr
 | [] -> false
 ;;
 
+(**
+    Prend une sign list, et teste si elle contient Pos
+ *)
 let rec contains_pos (sl : sign list) : bool =
 match sl with
-| Pos :: lr -> true
+| Pos :: _ -> true
 | _ :: lr -> contains_pos lr
 | [] -> false
 ;;
 
-(* ============================== MOD ==============================*)
+(* ============================== OPERATIONS ==============================
+    Les fonctions suivantes sont utilisées pour déterminer le signe
+    après une opération (+, -, *, /, %)
+*)
 
 let mod_signlist (sl1 : sign list) (sl2 : sign list) (po:position) : sign list =
     (if ((contains_neg sl1) && (contains_neg sl2)) ||
@@ -95,8 +129,6 @@ let mod_signlist (sl1 : sign list) (sl2 : sign list) (po:position) : sign list =
         (if (contains_zero sl2) then [Error(po)] else []))
 ;;
 
-(* ============================== DIV ==============================*)
-
 let div_signlist (sl1 : sign list) (sl2 : sign list) (po:position) : sign list =
     (if ((contains_neg sl1) && (contains_pos sl2)) ||
         ((contains_pos sl1) && (contains_neg sl2)) then [Neg] else []) @
@@ -111,8 +143,6 @@ let div_signlist (sl1 : sign list) (sl2 : sign list) (po:position) : sign list =
         (if (contains_zero sl2) then [Error(po)] else []))
 ;;
 
-(* ============================== MUL ==============================*)
-
 let mul_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
     (if ((contains_neg sl1) && (contains_pos sl2)) ||
         ((contains_pos sl1) && (contains_neg sl2)) then [Neg] else []) @
@@ -124,8 +154,6 @@ let mul_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
 
     (union_error sl1 sl2)
 ;;
-
-(* ============================== SUB ==============================*)
 
 let sub_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
     (if (contains_neg sl1) || (contains_pos sl2) then [Neg] else []) @
@@ -139,8 +167,6 @@ let sub_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
     (union_error sl1 sl2)    
 ;;
 
-(* ============================== ADD ==============================*)
-
 let add_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
     (if (contains_neg sl1) || (contains_neg sl2) then [Neg] else []) @
 
@@ -153,7 +179,7 @@ let add_signlist (sl1 : sign list) (sl2 : sign list) : sign list =
     (union_error sl1 sl2)    
 ;;
 
-(* ============================== Reste ==============================*)
+(* ============================== EXPR ==============================*)
 
 (**
     Prend une expr et une env_sign list, et rend une sign list.
@@ -179,11 +205,80 @@ match e with
     | Mod -> mod_signlist (expr_to_signlist po e1 env) (expr_to_signlist po e2 env) po )
 ;; 
 
+(* ============================== COND ==============================*)
+(* TODO : propagation du cond *)
+(* TODO : si sl1 ou sl2 est [Error] et rien d'autre tout devrait être false*)
+
+(**
+    Vérifie si la condition est possible (true) ou jamais possible (false)
+ *)
+let sign_cond (po:position) ((e1,com,e2) : cond) (env : env_sign list) : bool =
+let (sl1, sl2) = ((expr_to_signlist po e1 env),(expr_to_signlist po e2 env)) in
+match com with 
+| Eq -> if ((contains_neg sl1) && (contains_neg sl2)) ||
+        ((contains_zero sl1) && (contains_zero sl2)) ||
+        ((contains_pos sl1) && (contains_pos sl2)) 
+        then true else false
+
+| Ne -> if (not (contains_pos sl1)) && (not (contains_pos sl1)) &&
+        (not (contains_neg sl1)) && (not (contains_neg sl1))
+        then false else true
+
+| Lt -> if (contains_neg sl1) ||
+        (((contains_zero sl1) || (contains_pos sl1)) && (contains_pos sl2))
+        then true else false
+
+| Le -> if (contains_neg sl1) ||
+        ((contains_zero sl1) && ((contains_zero sl2) || contains_pos sl2)) ||
+        ((contains_pos sl1) && (contains_pos sl2))
+        then true else false
+
+| Gt -> if (contains_neg sl2) ||
+        (((contains_zero sl2) || (contains_pos sl2)) && (contains_pos sl1))
+        then true else false
+
+| Ge -> if (contains_neg sl2) ||
+        ((contains_zero sl2) && ((contains_zero sl1) || contains_pos sl1)) ||
+        ((contains_pos sl2) && (contains_pos sl1))
+        then true else false
+;;
+
+(**
+    Prend une condition et renvoie la condition "inverse".
+ *)
+let reverse_comp (c:comp) =
+match c with 
+| Eq -> Ne
+| Ne -> Eq
+| Lt -> Ge
+| Le -> Gt
+| Gt -> Le
+| Ge -> Lt
+;;
+
+(* ============================== IF ==============================*)
+
+(**
+    NON TERMINEE
+    Fonction mettant à jour l'environnement suite à un IF et ses blocs.
+ *)
+let rec sign_if (po:position) ((e1,c,e2):cond) 
+            (b1:block) (b2:block) (env : env_sign list) : env_sign list =
+if (sign_cond po (e1,c,e2) env) then
+    if (sign_cond po (e1,(reverse_comp c),e2) env)  
+        then env (* en attendant d'avoir écrit union_envsignlist *)
+        else sign_block b1 env
+else if (sign_cond po (e1,(reverse_comp c),e2) env)
+    then sign_block b2 env
+    else env
+
+(* ============================== autre ==============================*)
+
 (**
     Prend une position, une instr (ligne de code), et env_sign list
     rend la liste modifiée selon la ligne de code.
  *)
-let matchsign_instr (pos : int) (ins:instr) (el : env_sign list) : env_sign list =
+and matchsign_instr (pos : int) (ins:instr) (el : env_sign list) : env_sign list =
 match ins with 
 | Set(n,e) -> 
     (match look_for_varname n el with
@@ -193,10 +288,8 @@ match ins with
     (match look_for_varname n el with
     | [var] -> var.varSign <- Neg :: Zero :: Pos :: [] ; el
     | _ -> {varName = n; varSign = (Neg :: Zero :: Pos :: [])} :: el)
-| Print(e) -> el (*TODO*)
-| If (c,b1,b2) -> el (*TODO*)
-| While (c,b) -> el (*TODO*)
-;;
+| Print(_) -> el
+| _ -> el (*TODO : If(presque terminé) et While*)
 
 (**
     Prend un block (bloc de code), 
@@ -205,7 +298,7 @@ match ins with
     selon les variables rencontrées lors de la lecture du bloc de code. 
     Renvoie la nouvelle liste. 
  *)
-let sign_block (b : block) (env : env_sign list): env_sign list = 
+and sign_block (b : block) (env : env_sign list): env_sign list = 
     let rec loop bl acc = match bl with
     | [] -> acc
     | (pos, ins) :: blr -> loop blr (matchsign_instr pos ins acc)
@@ -237,8 +330,8 @@ in loop "" vs ;;
  *)
 let rec error_line (l : sign list) : int = match l with 
 | [] -> -1
-| Error(a) :: lr -> a 
-| var :: lr -> error_line lr ;;
+| Error(a) :: _ -> a 
+| _ :: lr -> error_line lr ;;
 
 (**
     Petite fonction auxiliaire prenant deux int, 
@@ -280,14 +373,4 @@ let print_error (posi:int) : unit = if (posi=(-1)) then print_string "Safe\n"
     avec leur valeurs finales possibles (+ 0 - !)
     et termine par print la première ligne où une erreur risque de se produire, sinon "safe".
  *)
-
 let sign_polish (p : program) : unit = print_error(print_env_sign_list (sign_block p [])) ;;
-
-(**let print_env_sign_list (env : env_sign list) : unit = match env with 
-| [] -> print_string "\n";
-| e :: l -> Printf.printf "%s %s\n" e.varName varSign_to_string(e.varSign) ; 
-    print_env_sign_list l ;;
-
-let sign_polish (p : program) : unit = print_env_sign_list (sign_block p []) ;;**)
-
-(** let sign_polish (p : program) : unit = match p with  _ -> ();; *)
