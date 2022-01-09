@@ -52,7 +52,7 @@ type program = block
   de nouveau environnements à chaque évaluation d'instruction.  
 *)
 type env = {
-  varName : name;
+  vName : name; (** Nom de la variable *)
   mutable value : Z.t
 }
 
@@ -64,7 +64,7 @@ type sign =
 
 type env_sign = {
   varName : name;
-  mutable varSign : sign list;
+  mutable varSign : sign list
 }
 
 (**
