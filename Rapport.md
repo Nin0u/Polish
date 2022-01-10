@@ -18,8 +18,9 @@ Ceci est le rapport de projet à inclure dans la racine comme mentionné dans le
     par votre rendu - sujet minimal, extensions éventuelles,
     éventuellement parties non réalisées ou non encore fonctionnelles.
 -->
-Tout le sujet minimal est complété à l'exception de l'option -sign à qui il manque quelques détails. 
-Voir la fin de ce document. 
+
+Tout le sujet minimal est complété à l'exception de l'option -sign à qui il manque quelques détails.
+Voir la fin de ce document.
 
 ## Compilation et exécution
 
@@ -64,6 +65,7 @@ avec `[argument]` valant :
 
 Nous avons décidé de découper notre projet de la manière suivante :
 
+- Un module à part `DataTypes` qui contient tous les types de données que nous utilisons
 - Un module pour lire et interpréter le fichier polish : `ReadPolish`
 - Un module pour afficher le code polish interpreté : `PrintPolish`
 - Un module pour evaluer le code interpreté : `EvalPolish`
@@ -111,15 +113,15 @@ Nous allégeons ainsi par la même occasion le fichier `polish.ml`.
 
 > implémentation avec zarith.
 
-12/12/21 : 
+12/12/21 :
 
 > print_polish terminé.
 
-28/12/21 : 
+28/12/21 :
 
 > simpl_polish terminé.
 
-31/12/21 : 
+31/12/21 :
 
 > Prise de décision pour qui implémente vars et sign.
 
@@ -127,7 +129,7 @@ Nous allégeons ainsi par la même occasion le fichier `polish.ml`.
 
 > vars_polish terminé.
 
-09/01/22 : 
+09/01/22 :
 
 > sign_polish ajouté, mais il n'est pas 100% terminé.
 
@@ -137,7 +139,7 @@ Nous allégeons ainsi par la même occasion le fichier `polish.ml`.
     Cette partie est entièrement libre : remarques, suggestions,
     questions...
 -->
+
 Nous n'avons malheureusement pas terminé sign_polish, par souci de temps.
 Les révisions pour les examens de mathématiques ont été très chronophages.
-Il ne manque que peu pour que sign_polish soit terminé, et par conséquent tout le projet : 
-il manque un détail pour que le cas des lignes IF soit traités, et il restait le cas des lignes WHILE.
+Il ne manque que la propagation du IF et du WHILE pour que sign_polish soit terminé, et par conséquent tout le projet.
