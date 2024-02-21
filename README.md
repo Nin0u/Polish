@@ -14,13 +14,12 @@ An interpretor of a simple language using Polish notation
   
 ## How to Use
 - Write a program in Polish
-- Compile the program by typing `make`, a `.exe` file name will be created.
+- Compile the program by typing `make`, a `polish.exe` file will be created.
 - Execute run
   ```
   ./run [mode] [path_to_file]
   ```
 with mode being one of these options :
-- `--reprint`
 - `--eval`
 - `--simpl`
 - `--vars`
