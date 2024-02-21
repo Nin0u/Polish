@@ -22,6 +22,6 @@ An interpretor of a simple language using Polish notation
 with mode being one of these options :
 - `--reprint`
 - `--eval`
--- `simpl`
--- `vars`
--- `sign`
+- `--simpl`
+- `--vars`
+- `--sign`
