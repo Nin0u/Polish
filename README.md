@@ -7,7 +7,11 @@ An interpretor of a simple language using Polish notation
 - [Zarith](https://github.com/ocaml/Zarith)
 
 ## Features
-
+- Code Evaluation
+- Code Simplification
+- Uninitialized Variable Analysis
+- Integers' Sign Analysis
+  
 ## How to Use
 - Write a program in Polish
 - Compile the program by typing `make`, a `.exe` file name will be created.
@@ -16,8 +20,8 @@ An interpretor of a simple language using Polish notation
   ./run [mode] [path_to_file]
   ```
 with mode being one of these options :
---reprint
---eval
---simpl
---vars
---sign
+- `--reprint`
+- `--eval`
+-- `simpl`
+-- `vars`
+-- `sign`
